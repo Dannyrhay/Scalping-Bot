@@ -1,0 +1,6 @@
+env
+test_mt5_connection.py
+test_smtp.py
+test_strategies.py
+trades.csv
+.env

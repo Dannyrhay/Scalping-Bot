@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePilot</title>
+    <link href="https://img.icons8.com/?size=100&id=Jsd0K0MbZNkf&format=png&color=000000" rel="icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        // Apply theme before page load to prevent FOUC
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+     <style>
+        /* Base (Light Mode) Styles - Refined for better contrast and feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Tailwind gray-50 */
+            color: #1f2937;      /* Tailwind gray-800 - default text */
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .header {
+            background-color: #ffffff; /* White */
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .header h1 {
+            color: #111827; /* gray-900 */
+        }
+        .header .text-xs { /* For Balance, Equity labels */
+            color: #4b5563; /* gray-600 */
+        }
+        .header .font-semibold { /* For Balance, Equity values */
+            color: #1f2937; /* gray-800 */
+        }
+        .nav-sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .nav-link {
+            color: #374151; /* gray-700 */
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+        }
+        .nav-link svg {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #6b7280; /* gray-500 */
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            background-color: #eff6ff; /* blue-50 */
+            color: #1d4ed8;      /* blue-700 */
+        }
+        .nav-link:hover svg {
+            color: #1d4ed8;
+        }
+        .nav-link.active {
+            background-color: #dbeafe; /* blue-100 */
+            color: #1e40af;      /* blue-800 */
+            font-weight: 600;
+        }
+        .nav-link.active svg {
+            color: #1e40af;
+        }
+
+        #equityChart {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .content-area {
+            background-color: #f9fafb; /* gray-50 */
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            color: #374151; /* Default text in cards: gray-700 */
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); /* Softer shadow */
+        }
+        .card-title {
+            color: #111827; /* gray-900 - very dark for titles */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .table-header {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #4b5563;      /* gray-600 - slightly darker for header text */
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .table-cell {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f3f4f6; /* gray-100 for subtle lines */
+            color: #374151; /* gray-700 - for table data */
+        }
+        .table-row:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        input[type="text"], input[type="number"], input[type="password"], input[type="date"], select, textarea {
+            background-color: #ffffff; /* White background for inputs */
+            border: 1px solid #d1d5db; /* gray-300 */
+            color: #111827;      /* gray-900 for input text */
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem; /* Consistent padding for inputs */
+            width: 100%; /* Default to full width */
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+            border-color: #2563eb; /* blue-600 */
+            box-shadow: 0 0 0 2px #bfdbfe; /* blue-200 focus ring */
+        }
+        label { color: #374151; font-weight: 500; } /* gray-700 for labels */
+        .btn {
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding-top: 0.625rem;    /* Custom padding for a consistent feel */
+            padding-bottom: 0.625rem; /* Custom padding for a consistent feel */
+            padding-left: 0.75rem;   /* Custom padding for a consistent feel */
+            padding-right: 0.75rem;  /* Custom padding for a consistent feel */
+            display: inline-flex;    /* For aligning icon and text */
+            align-items: center;     /* For aligning icon and text */
+            justify-content: center; /* For aligning icon and text */
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s; /* Smooth transitions */
+        }
+        .btn-primary { background-color: #2563eb; color: white; } .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #e5e7eb; color: #1f2937; border: 1px solid #d1d5db;}
+        .btn-secondary:hover { background-color: #d1d5db; }
+        .btn-danger { background-color: #dc2626; color: white; } .btn-danger:hover { background-color: #b91c1c; }
+        .btn-warning { background-color: #f59e0b; color: white; } /* Amber-500 */
+        .btn-warning:hover { background-color: #d97706; } /* Amber-600 */
+
+
+        /* Dark Mode Overrides */
+        html.dark body { background-color: #0d1117; color: #c9d1d9; }
+        html.dark .header { background-color: #161b22; border-bottom: 1px solid #30363d; }
+        html.dark .header h1 { color: #c9d1d9; }
+        html.dark .header .text-xs { color: #b0bec5; }
+        html.dark .header .font-semibold { color: #c9d1d9; }
+        html.dark .nav-sidebar { background-color: #161b22; border-right: 1px solid #30363d; }
+        html.dark .nav-link { color: #b0bec5; }
+        html.dark .nav-link svg { color: #b0bec5; }
+        html.dark .nav-link:hover { background-color: #21262d; color: #58a6ff; }
+        html.dark .nav-link:hover svg { color: #58a6ff; }
+        html.dark .nav-link.active { background-color: rgba(88, 166, 255, 0.1); color: #58a6ff; }
+        html.dark .nav-link.active svg { color: #58a6ff; }
+        html.dark .content-area { background-color: #0d1117; }
+        html.dark .card { background-color: #161b22; border: 1px solid #30363d; color: #c9d1d9; }
+        html.dark .card-title { color: #c9d1d9; }
+        html.dark .table-header { background-color: #21262d; color: #b0bec5; }
+        html.dark .table-cell { border-bottom: 1px solid #30363d; color: #b0bec5; }
+        html.dark .table-row:hover { background-color: #21262d; }
+        html.dark input[type="text"], html.dark input[type="number"], html.dark input[type="password"], html.dark input[type="date"], html.dark select, html.dark textarea {
+            background-color: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
+        }
+        html.dark input[type="text"]:focus, html.dark input[type="number"]:focus, html.dark input[type="password"]:focus, html.dark input[type="date"]:focus, html.dark select:focus, html.dark textarea:focus {
+            border-color: #58a6ff; box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+        }
+        html.dark label { color: #b0bec5; }
+        html.dark .btn-secondary { background-color: #21262d; color: #c9d1d9; border-color: #30363d;}
+        html.dark .btn-secondary:hover { background-color: #30363d; }
+        html.dark .btn-warning { background-color: #d97706; color: white; }
+        html.dark .btn-warning:hover { background-color: #b45309; }
+
+        html.dark #mini-log-feed {
+            background-color: #161b22;
+            border-color: #30363d;
+        }
+
+        .status-indicator { padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; text-transform: uppercase; letter-spacing: 0.05em;}
+        .status-RUNNING { background-color: #def7ec; color: #03543f; } html.dark .status-RUNNING { background-color: #05966933; color: #6ee7b7; }
+        .status-PAUSED { background-color: #fef3c7; color: #92400e; } html.dark .status-PAUSED { background-color: #d9770633; color: #fcd34d; }
+        .status-STOPPED { background-color: #e5e7eb; color: #4b5563; } html.dark .status-STOPPED { background-color: #4b556333; color: #9ca3af; }
+        .status-ERROR, .status-UNINITIALIZED, .status-MT5_DISCONNECTED, .status-ERROR_IMPORT, .status-ERROR_API { background-color: #fee2e2; color: #991b1b; }
+        html.dark .status-ERROR, html.dark .status-UNINITIALIZED, html.dark .status-MT5_DISCONNECTED, html.dark .status-ERROR_IMPORT, html.dark .status-ERROR_API { background-color: #ef444433; color: #fca5a5; }
+
+        .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; color: white; padding: 12px 20px; border-radius: 0.5rem; z-index: 1050; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; transform: translateY(20px); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background-color: #10b981; } html.dark .toast.success { background-color: #059669; }
+        .toast.error { background-color: #ef4444; }   html.dark .toast.error { background-color: #dc2626; }
+        .toast.info { background-color: #3b82f6; }    html.dark .toast.info { background-color: #2563eb; }
+
+        .nav-sidebar { transition: transform 0.3s ease-in-out; }
+        @media (max-width: 767px) {
+            .nav-sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001; transform: translateX(-100%); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+            .nav-sidebar.open { transform: translateX(0); }
+        }
+        .content-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; display: none; opacity: 0; transition: opacity 0.3s ease-in-out;}
+        .content-overlay.active { display: block; opacity: 1; }
+        .table-cell { white-space: normal; } /* Allow wrapping on small screens */
+        @media (min-width: 768px) { .table-cell { white-space: nowrap; } } /* No wrap on larger screens */
+
+        /* MT5 Modal Specific Styles */
+        .modal-backdrop-blur {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .mt5-modal-content {
+            background-color: #ffffff; /* Light mode background */
+            color: #1f2937; /* Light mode text */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        html.dark .mt5-modal-content {
+            background-color: #161b22; /* Dark mode background for modal */
+            color: #c9d1d9; /* Dark mode text for modal */
+            border: 1px solid #30363d;
+        }
+        .mt5-modal-input { /* General input styling for modal, will be overridden by dark mode */
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+            border-color: #d1d5db; /* Tailwind gray-300 */
+            color: #111827; /* Tailwind gray-900 */
+        }
+        html.dark .mt5-modal-input {
+            background-color: #0d1117; /* Darker input fields for dark mode */
+            border-color: #30363d; /* Darker border for dark mode */
+            color: #c9d1d9; /* Light text for dark mode inputs */
+        }
+        .mt5-modal-input:focus {
+            border-color: #2563eb; /* Tailwind blue-600 */
+            box-shadow: 0 0 0 2px #bfdbfe; /* Tailwind blue-200 focus ring */
+        }
+        html.dark .mt5-modal-input:focus {
+            border-color: #58a6ff; /* Lighter blue for dark mode focus */
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+        }
+        .mt5-modal-button-primary {
+            background-color: #2563eb; /* Tailwind blue-600 */
+            color: white;
+        }
+        .mt5-modal-button-primary:hover {
+            background-color: #1d4ed8; /* Tailwind blue-700 */
+        }
+        html.dark .mt5-modal-button-primary {
+            background-color: #3b82f6; /* Tailwind blue-500 for dark */
+        }
+        html.dark .mt5-modal-button-primary:hover {
+            background-color: #2563eb; /* Tailwind blue-600 for dark hover */
+        }
+        .mt5-modal-button-secondary {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #1f2937; /* Tailwind gray-800 */
+            border: 1px solid #d1d5db; /* Tailwind gray-300 */
+        }
+        .mt5-modal-button-secondary:hover {
+            background-color: #d1d5db; /* Tailwind gray-300 */
+        }
+        html.dark .mt5-modal-button-secondary {
+            background-color: #374151; /* Tailwind gray-700 for dark */
+            color: #c9d1d9; /* Light text for dark secondary button */
+            border-color: #4b5563; /* Tailwind gray-600 border */
+        }
+        html.dark .mt5-modal-button-secondary:hover {
+            background-color: #4b5563; /* Tailwind gray-600 for dark hover */
+        }
+
+    </style>
+</head>
+<body class="flex flex-col h-screen text-sm antialiased">
+    <div id="content-overlay" class="content-overlay md:hidden"></div>
+
+    <header class="header p-3 md:p-4 flex justify-between items-center shadow-sm flex-shrink-0">
+        <div class="flex items-center">
+            <button id="hamburger-btn" aria-label="Open Menu" class="md:hidden mr-2 p-2 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <h1 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">TradePilot</h1>
+        </div>
+        <div class="flex items-center space-x-3 md:space-x-4">
+            <button id="openMt5SettingsBtnHeader" class="btn btn-secondary text-xs py-1.5 px-3 flex items-center">
+                <i class="fas fa-cogs mr-1.5"></i> MT5 LOGIN
+            </button>
+            <div id="bot-status-indicator" class="status-indicator status-STOPPED">OFFLINE</div>
+            <div class="hidden sm:flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
+                <div>Balance: <span id="account-balance" class="font-semibold text-gray-700 dark:text-gray-200">$0.00</span></div>
+                <div>Equity: <span id="account-equity" class="font-semibold text-gray-700 dark:text-gray-200">$0.00</span></div>
+                <div>Free Margin: <span id="free-margin" class="font-semibold text-gray-700 dark:text-gray-200">$0.00</span></div>
+            </div>
+            <div id="current-time-utc" class="font-semibold hidden lg:block text-xs text-gray-500 dark:text-gray-400"></div>
+            <button id="theme-toggle" title="Toggle theme" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                <svg id="theme-toggle-dark-icon" class="hidden h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="hidden h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 10.607a1 1 0 011.414 0l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="md:hidden p-2 text-xs text-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+        <div class="grid grid-cols-3 gap-1 text-gray-600 dark:text-gray-400">
+            <div>Balance: <span id="account-balance-mobile" class="font-semibold block text-gray-700 dark:text-gray-200">$0.00</span></div>
+            <div>Equity: <span id="account-equity-mobile" class="font-semibold block text-gray-700 dark:text-gray-200">$0.00</span></div>
+            <div>Free Margin: <span id="free-margin-mobile" class="font-semibold block text-gray-700 dark:text-gray-200">$0.00</span></div>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="nav-sidebar" class="nav-sidebar w-60 md:w-64 p-3 md:p-4 space-y-1 md:space-y-2 flex-shrink-0 overflow-y-auto">
+            <button id="close-sidebar-btn" aria-label="Close Menu" class="md:hidden absolute top-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-full">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="pt-8 md:pt-0"> <a href="#" class="nav-link active" onclick="showTab('dashboard'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-link" onclick="showTab('open-trades'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                    Open Trades
+                </a>
+                <a href="#" class="nav-link" onclick="showTab('trade-history'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                    Trade History
+                </a>
+                <a href="#" class="nav-link" onclick="showTab('backtesting'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM21 21l-5.197-5.197" /></svg>
+                    Backtesting
+                </a>
+                <a href="#" class="nav-link" onclick="showTab('settings'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.646.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.333.183-.582.495-.644-.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.137-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="#" class="nav-link" onclick="showTab('bot-logs'); closeMobileSidebar();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
+                    Bot Logs
+                </a>
+            </div>
+        </aside>
+
+        <main class="content-area flex-1 overflow-y-auto p-4 md:p-6">
+            <div id="dashboard" class="tab-content active space-y-4 md:space-y-6">
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Balance</h3>
+                        <p id="stat-balance" class="text-2xl md:text-3xl font-semibold mt-1 text-gray-800 dark:text-gray-100">$0.00</p>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Equity</h3>
+                        <p id="stat-equity" class="text-2xl md:text-3xl font-semibold mt-1 text-gray-800 dark:text-gray-100">$0.00</p>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Session P/L</h3>
+                        <p id="session-pl" class="text-2xl md:text-3xl font-semibold mt-1 text-gray-800 dark:text-gray-100">$0.00</p>
+                    </div>
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Open Trades</h3>
+                        <p id="stat-open-trades" class="text-2xl md:text-3xl font-semibold mt-1 text-gray-800 dark:text-gray-100">0</p>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div class="card lg:col-span-1 p-4">
+                        <h2 class="card-title text-center mb-3">Bot Controls</h2>
+                        <div class="space-y-3">
+                            <button id="btn-start-bot" class="btn btn-primary w-full flex items-center justify-center text-sm py-2.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>START BOT</button>
+                            <button id="btn-stop-bot" class="btn btn-danger w-full flex items-center justify-center text-sm py-2.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 9a1 1 0 00-1 1v.01L7 10a1 1 0 000 2h1l.01.01A1 1 0 009 12V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v.01L11 10a1 1 0 000 2h1l.01.01A1 1 0 0013 12V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>STOP BOT</button>
+                            <button id="btn-pause-resume-trading" class="btn btn-secondary w-full flex items-center justify-center text-sm py-2.5"></button>
+                            <button id="btn-trigger-retrain" class="btn btn-secondary w-full flex items-center justify-center text-sm py-2.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>TRIGGER ML RETRAIN</button>
+                            <button id="btn-force-full-ml-training" class="btn btn-warning w-full"> <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8 0 1010.586 10.586zM10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M3 10a7 7 0 0111.397-5.373A.75.75 0 0115 5.248v1.116A5.5 5.5 0 0010.5 2H9.5a5.5 5.5 0 00-4.804 2.943A.75.75 0 014.03 5.373 7 7 0 013 10zm1.03.246a.75.75 0 01.666-.881A5.502 5.502 0 019.5 7h1a5.502 5.502 0 014.804 2.365.75.75 0 01-.152 1.035A7.002 7.002 0 0110 17a7.002 7.002 0 01-6.121-3.485.75.75 0 01.151-1.029z" clip-rule="evenodd" /></svg>
+                            FORCE FULL ML TRAINING
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card lg:col-span-2 p-4">
+                        <h2 class="card-title text-center">Performance / Equity Curve</h2>
+                        <div class="h-64 md:h-72">
+                            <canvas id="equityCurveChart"></canvas>
+                        </div>
+                         <div id="last-error-message-dashboard" class="mt-3 text-xs text-red-600 dark:text-red-400"></div>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                    <div class="card p-4">
+                        <h2 class="card-title text-center">Open Positions Quick View</h2>
+                        <div id="open-positions-summary" class="text-sm space-y-1 max-h-48 overflow-y-auto">
+                            <p class="text-gray-500 dark:text-gray-400">Loading...</p>
+                        </div>
+                        <button class="btn btn-secondary text-sm mt-3" onclick="showTab('open-trades'); closeMobileSidebar();">View All Open Trades →</button>
+                    </div>
+                    <div class="card p-4">
+                        <h2 class="card-title text-center">Recent Activity</h2>
+                        <div id="mini-log-feed" class="text-xs space-y-0.5 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-md border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+                            <p class="text-gray-500 dark:text-gray-400">Loading logs...</p>
+                        </div>
+                         <button class="btn btn-secondary text-sm mt-3" onclick="showTab('bot-logs'); closeMobileSidebar();">View Full Logs →</button>
+                    </div>
+                </section>
+            </div>
+
+            <div id="open-trades" class="tab-content">
+                <h2 class="text-xl md:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Live Open Positions</h2>
+                <div class="card overflow-x-auto p-0 md:p-1"> <table class="min-w-full w-full">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4">Symbol</th><th class="table-cell text-left px-3 py-2.5 md:px-4">Ticket</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4">Type</th><th class="table-cell text-right px-3 py-2.5 md:px-4">Volume</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">Entry Price</th><th class="table-cell text-right px-3 py-2.5 md:px-4">Market Price</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4 hidden sm:table-cell">SL</th><th class="table-cell text-right px-3 py-2.5 md:px-4 hidden sm:table-cell">TP</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">P/L Pips</th><th class="table-cell text-right px-3 py-2.5 md:px-4">P/L ($)</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden md:table-cell">Entry Time</th><th class="table-cell text-left px-3 py-2.5 md:px-4 hidden lg:table-cell">Entry TF</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden lg:table-cell">Comment</th><th class="table-cell text-center px-3 py-2.5 md:px-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="open-trades-table-body" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="trade-history" class="tab-content">
+                <h2 class="text-xl md:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Completed Trade History</h2>
+                <div class="card overflow-x-auto p-0 md:p-1"> <table class="min-w-full w-full">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4">Symbol</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4">Ticket</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4">Type</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">Volume</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">Entry Price</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4 hidden sm:table-cell">SL</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4 hidden sm:table-cell">TP</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">Exit Price</th>
+                                <th class="table-cell text-right px-3 py-2.5 md:px-4">P/L ($)</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden md:table-cell">Entry Time</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden md:table-cell">Exit Time</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden lg:table-cell">Entry TF</th>
+                                <th class="table-cell text-left px-3 py-2.5 md:px-4 hidden sm:table-cell">Exit Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trade-history-table-body" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="backtesting" class="tab-content space-y-6">
+                <h2 class="text-xl md:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Strategy Backtesting</h2>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Backtest Parameters</h3>
+                    <form id="backtest-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="backtest-symbol" class="block text-sm font-medium mb-1">Symbol:</label>
+                                <input type="text" id="backtest-symbol" value="XAUUSDm" class="text-sm w-full">
+                            </div>
+                            <div>
+                                <label for="backtest-timeframe" class="block text-sm font-medium mb-1">Timeframe:</label>
+                                <select id="backtest-timeframe" class="text-sm w-full">
+                                    <option value="M1">M1</option>
+                                    <option value="M5" selected>M5</option>
+                                    <option value="M15">M15</option>
+                                    <option value="M30">M30</option>
+                                    <option value="H1">H1</option>
+                                    <option value="H4">H4</option>
+                                    <option value="D1">D1</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="backtest-strategy" class="block text-sm font-medium mb-1">Strategy:</label>
+                                <select id="backtest-strategy" class="text-sm w-full">
+                                    </select>
+                            </div>
+                            <div>
+                                <label for="backtest-start-date" class="block text-sm font-medium mb-1">Start Date:</label>
+                                <input type="date" id="backtest-start-date" value="2023-01-01" class="text-sm w-full">
+                            </div>
+                            <div>
+                                <label for="backtest-end-date" class="block text-sm font-medium mb-1">End Date:</label>
+                                <input type="date" id="backtest-end-date" value="2023-12-31" class="text-sm w-full">
+                            </div>
+                            <div>
+                                <label for="backtest-initial-cash" class="block text-sm font-medium mb-1">Initial Cash:</label>
+                                <input type="number" id="backtest-initial-cash" value="10000" class="text-sm w-full">
+                            </div>
+                            <div>
+                                <label for="backtest-commission-bps" class="block text-sm font-medium mb-1">Commission (bps, e.g., 2 for 0.02%):</label>
+                                <input type="number" id="backtest-commission-bps" value="0" step="0.1" class="text-sm w-full">
+                            </div>
+                             <div>
+                                <label for="backtest-ml-enabled" class="flex items-center text-sm font-medium mt-4">
+                                    <input type="checkbox" id="backtest-ml-enabled" checked class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                                    Enable ML Validation
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="strategy-specific-params-container" class="mt-4 p-3 border border-gray-200 dark:border-gray-700 rounded-md">
+                            <h4 class="text-md font-medium mb-2 text-gray-700 dark:text-gray-300">Strategy-Specific Parameters:</h4>
+                            <div id="strategy-specific-params-fields" class="space-y-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Select a strategy to see its specific parameters. Default values from main config will be used if not set here.</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btn-run-backtest" class="btn btn-primary mt-6 text-sm py-2 px-3">
+                            <i class="fas fa-cogs mr-2"></i>Run Backtest
+                        </button>
+                    </form>
+                </section>
+
+                <section id="backtest-results-section" class="card p-4 md:p-6 hidden">
+                    <h3 class="card-title">Backtest Results</h3>
+                    <div id="backtest-spinner" class="text-center py-4 hidden">
+                        <i class="fas fa-spinner fa-spin fa-3x text-blue-500 dark:text-blue-400"></i>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Running backtest, please wait...</p>
+                    </div>
+                    <div id="backtest-output" class="space-y-4 hidden">
+                        <div id="backtest-stats-summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                            </div>
+                        <div id="backtest-plot-container" class="mt-4 rounded-lg overflow-hidden shadow">
+                            <h4 class="text-md font-medium mb-2 p-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">Equity Curve & Trades</h4>
+                            <iframe id="backtest-plot-iframe" class="w-full h-[500px] md:h-[600px]" style="border:none;"></iframe>
+                            <p id="backtest-plot-message" class="p-3 text-sm text-gray-500 dark:text-gray-400 hidden">Plot not available.</p>
+                        </div>
+                         <div id="backtest-trades-container" class="mt-4">
+                            <h4 class="text-md font-medium mb-2">Trades List</h4>
+                            <div class="max-h-[400px] overflow-y-auto card p-0 border border-gray-200 dark:border-gray-700 rounded-md">
+                                <table class="min-w-full w-full text-xs">
+                                    <thead class="table-header sticky top-0">
+                                        <tr>
+                                            <th class="table-cell text-left">EntryTime</th> <th class="table-cell text-left">ExitTime</th>
+                                            <th class="table-cell text-left">Direction</th> <th class="table-cell text-right">Size</th>
+                                            <th class="table-cell text-right">EntryPrice</th> <th class="table-cell text-right">ExitPrice</th>
+                                            <th class="table-cell text-right">SL Price</th> <th class="table-cell text-right">TP Price</th>
+                                            <th class="table-cell text-right">PnL ($)</th> <th class="table-cell text-right">Return (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="backtest-trades-table-body" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="backtest-full-stats-container" class="mt-4">
+                            <h4 class="text-md font-medium mb-2">Detailed Statistics</h4>
+                            <pre id="all-stats-json" class="text-xs bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto max-h-[300px]"></pre>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="settings" class="tab-content space-y-6">
+                <h2 class="text-xl md:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Bot Configuration Settings</h2>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">MT5 Account Credentials</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Update your MT5 connection details here. Environment variables for credentials will take precedence over these settings.
+                    </p>
+                    <button id="openMt5SettingsBtnSettingsTab" class="btn btn-primary text-sm py-2 px-3">
+                        <i class="fas fa-key mr-2"></i>Update MT5 Credentials
+                    </button>
+                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        The bot will attempt to reconnect after saving. Check status indicator.
+                    </p>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Machine Learning Settings</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-4">
+                        <div>
+                            <label for="ml-model-type" class="block text-sm font-medium mb-1">ML Model Type:</label>
+                            <select id="ml-model-type" name="ml_model_type" class="text-sm w-full">
+                                <option>Loading models...</option>
+                            </select>
+                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                A full retrain is required for model changes to take effect. Use the buttons on the dashboard.
+                            </p>
+                        </div>
+                    </div>
+                    <button id="btn-save-ml-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save ML Settings</button>
+                </section>
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">General Bot Operation</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-4">
+                        <div><label for="monitoring-interval" class="block text-sm font-medium mb-1">Monitoring Interval (s):</label><input type="number" id="monitoring-interval" name="monitoring_interval_seconds" class="text-sm w-full"></div>
+                        <div><label for="cooldown-period" class="block text-sm font-medium mb-1">Cooldown Period (min):</label><input type="number" id="cooldown-period" name="cooldown_period_minutes" class="text-sm w-full"></div>
+                        <div><label for="max-consecutive-losses" class="block text-sm font-medium mb-1">Max Consecutive Losses:</label><input type="number" id="max-consecutive-losses" name="max_consecutive_losses" class="text-sm w-full"></div>
+                        <!-- NEW: Max Trades Per Symbol -->
+                        <div><label for="max-trades-per-symbol" class="block text-sm font-medium mb-1">Max Trades Per Symbol:</label><input type="number" id="max-trades-per-symbol" name="max_trades_per_symbol" class="text-sm w-full" min="1"></div>
+                    </div>
+                    <button id="btn-save-op-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Operational Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">H1 Trend Filter</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" id="h1-filter-enabled" name="h1_trend_filter.enabled" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                            Enable H1 Trend Filter
+                        </label>
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" id="h1-filter-allow-neutral" name="h1_trend_filter.allow_neutral" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                            Allow Trades in Neutral H1 Trend
+                        </label>
+                    </div>
+                    <button id="btn-save-h1-filter-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save H1 Filter Settings</button>
+                </section>
+
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Global Risk Management</h3>
+                     <div><label for="risk-percent" class="block text-sm font-medium mb-1">Risk Per Trade (% of Balance):</label><input type="number" step="0.01" id="risk-percent" name="risk_percent_per_trade" class="text-sm w-full"></div>
+                    <button id="btn-save-risk-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Risk Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Profit-Securing & Trailing Stop</h3>
+                    <div class="space-y-4">
+                        <label class="flex items-center text-sm"><input type="checkbox" id="ps-enabled" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500"> Enable Feature</label>
+
+                        <div>
+                            <h4 class="text-md font-semibold mt-3 mb-1 text-gray-700 dark:text-gray-300">Default Settings:</h4>
+                            <div class="ml-4 space-y-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/30">
+                                <div><label for="ps-default-trigger-profit" class="block text-sm font-medium mb-0.5">Trigger Profit (Pips):</label><input type="number" id="ps-default-trigger-profit" class="text-sm w-full"></div>
+                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Initial Profit Securing:</p>
+                                <div>
+                                    <label for="ps-default-secure-type" class="block text-sm font-medium mb-0.5">Method:</label>
+                                    <select id="ps-default-secure-type" class="text-sm w-full">
+                                        <option value="fixed_pips">Fixed Pips</option>
+                                        <option value="percentage_of_profit">Percentage of Current Profit</option>
+                                    </select>
+                                </div>
+                                <div id="ps-default-secure-fixed-pips-group">
+                                    <label for="ps-default-secure-fixed-pips" class="block text-sm font-medium mb-0.5">Secure Fixed Pips:</label>
+                                    <input type="number" id="ps-default-secure-fixed-pips" class="text-sm w-full">
+                                </div>
+                                <div id="ps-default-secure-percentage-group" style="display:none;">
+                                    <label for="ps-default-secure-percentage" class="block text-sm font-medium mb-0.5">Secure Percentage (% of Profit):</label>
+                                    <input type="number" step="0.1" id="ps-default-secure-percentage" class="text-sm w-full" placeholder="e.g., 50 for 50%">
+                                </div>
+                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <label class="flex items-center text-sm mt-2"><input type="checkbox" id="ps-default-trailing-active" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500"> Activate Trailing Stop</label>
+                                <div id="ps-default-trailing-options" style="display:none;" class="ml-4 space-y-2 mt-1">
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Trailing Stop Configuration:</p>
+                                    <div>
+                                        <label for="ps-default-trailing-method" class="block text-sm font-medium mb-0.5">Trailing Method:</label>
+                                        <select id="ps-default-trailing-method" class="text-sm w-full">
+                                            <option value="fixed_pips_behind">Fixed Pips Behind Price</option>
+                                            <option value="atr_multiplier">ATR Multiplier</option>
+                                            <option value="percentage_of_peak_profit">Percentage of Peak Profit</option>
+                                        </select>
+                                    </div>
+                                    <div id="ps-default-trailing-fixed-pips-group">
+                                        <label for="ps-default-trailing-fixed-pips-value" class="block text-sm font-medium mb-0.5">Trail Pips Behind:</label>
+                                        <input type="number" id="ps-default-trailing-fixed-pips-value" class="text-sm w-full">
+                                    </div>
+                                    <div id="ps-default-trailing-atr-group" style="display:none;">
+                                        <div><label for="ps-default-trailing-atr-multiplier" class="block text-sm font-medium mb-0.5">ATR Multiplier:</label><input type="number" step="0.1" id="ps-default-trailing-atr-multiplier" class="text-sm w-full"></div>
+                                        <div><label for="ps-default-trailing-atr-period" class="block text-sm font-medium mb-0.5">ATR Period:</label><input type="number" id="ps-default-trailing-atr-period" class="text-sm w-full"></div>
+                                    </div>
+                                    <div id="ps-default-trailing-percentage-group" style="display:none;">
+                                        <label for="ps-default-trailing-percentage-value" class="block text-sm font-medium mb-0.5">Secure % of Peak Profit:</label>
+                                        <input type="number" step="0.1" id="ps-default-trailing-percentage-value" class="text-sm w-full" placeholder="e.g., 70 for 70%">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-md font-semibold mt-3 mb-1 text-gray-700 dark:text-gray-300">BTCUSDm Specific:</h4>
+                             <div class="ml-4 space-y-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/30">
+                                <div><label for="ps-btcusdm-trigger-profit" class="block text-sm font-medium mb-0.5">Trigger Profit (Pips):</label><input type="number" id="ps-btcusdm-trigger-profit" class="text-sm w-full"></div>
+                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Initial Profit Securing:</p>
+                                <div>
+                                    <label for="ps-btcusdm-secure-type" class="block text-sm font-medium mb-0.5">Method:</label>
+                                    <select id="ps-btcusdm-secure-type" class="text-sm w-full">
+                                        <option value="fixed_pips">Fixed Pips</option>
+                                        <option value="percentage_of_profit">Percentage of Current Profit</option>
+                                    </select>
+                                </div>
+                                <div id="ps-btcusdm-secure-fixed-pips-group">
+                                    <label for="ps-btcusdm-secure-fixed-pips" class="block text-sm font-medium mb-0.5">Secure Fixed Pips:</label>
+                                    <input type="number" id="ps-btcusdm-secure-fixed-pips" class="text-sm w-full">
+                                </div>
+                                <div id="ps-btcusdm-secure-percentage-group" style="display:none;">
+                                    <label for="ps-btcusdm-secure-percentage" class="block text-sm font-medium mb-0.5">Secure Percentage (% of Profit):</label>
+                                    <input type="number" step="0.1" id="ps-btcusdm-secure-percentage" class="text-sm w-full">
+                                </div>
+                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <label class="flex items-center text-sm mt-2"><input type="checkbox" id="ps-btcusdm-trailing-active" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500"> Activate Trailing Stop</label>
+                                <div id="ps-btcusdm-trailing-options" style="display:none;" class="ml-4 space-y-2 mt-1">
+                                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Trailing Stop Configuration:</p>
+                                    <div>
+                                        <label for="ps-btcusdm-trailing-method" class="block text-sm font-medium mb-0.5">Trailing Method:</label>
+                                        <select id="ps-btcusdm-trailing-method" class="text-sm w-full">
+                                            <option value="fixed_pips_behind">Fixed Pips Behind Price</option>
+                                            <option value="atr_multiplier">ATR Multiplier</option>
+                                            <option value="percentage_of_peak_profit">Percentage of Peak Profit</option>
+                                        </select>
+                                    </div>
+                                    <div id="ps-btcusdm-trailing-fixed-pips-group">
+                                        <label for="ps-btcusdm-trailing-fixed-pips-value" class="block text-sm font-medium mb-0.5">Trail Pips Behind:</label>
+                                        <input type="number" id="ps-btcusdm-trailing-fixed-pips-value" class="text-sm w-full">
+                                    </div>
+                                    <div id="ps-btcusdm-trailing-atr-group" style="display:none;">
+                                        <div><label for="ps-btcusdm-trailing-atr-multiplier" class="block text-sm font-medium mb-0.5">ATR Multiplier:</label><input type="number" step="0.1" id="ps-btcusdm-trailing-atr-multiplier" class="text-sm w-full"></div>
+                                        <div><label for="ps-btcusdm-trailing-atr-period" class="block text-sm font-medium mb-0.5">ATR Period:</label><input type="number" id="ps-btcusdm-trailing-atr-period" class="text-sm w-full"></div>
+                                    </div>
+                                    <div id="ps-btcusdm-trailing-percentage-group" style="display:none;">
+                                        <label for="ps-btcusdm-trailing-percentage-value" class="block text-sm font-medium mb-0.5">Secure % of Peak Profit:</label>
+                                        <input type="number" step="0.1" id="ps-btcusdm-trailing-percentage-value" class="text-sm w-full">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-md font-semibold mt-3 mb-1 text-gray-700 dark:text-gray-300">XAUUSDm Specific:</h4>
+                            <div class="ml-4 space-y-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/30">
+                                <div><label for="ps-xauusdm-trigger-profit" class="block text-sm font-medium mb-0.5">Trigger Profit (Pips):</label><input type="number" id="ps-xauusdm-trigger-profit" class="text-sm w-full"></div>
+                                <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Initial Profit Securing:</p>
+                                <div>
+                                    <label for="ps-xauusdm-secure-type" class="block text-sm font-medium mb-0.5">Method:</label>
+                                    <select id="ps-xauusdm-secure-type" class="text-sm w-full">
+                                        <option value="fixed_pips">Fixed Pips</option>
+                                        <option value="percentage_of_profit">Percentage of Current Profit</option>
+                                    </select>
+                                </div>
+                                <div id="ps-xauusdm-secure-fixed-pips-group">
+                                    <label for="ps-xauusdm-secure-fixed-pips" class="block text-sm font-medium mb-0.5">Secure Fixed Pips:</label>
+                                    <input type="number" id="ps-xauusdm-secure-fixed-pips" class="text-sm w-full">
+                                </div>
+                                <div id="ps-xauusdm-secure-percentage-group" style="display:none;">
+                                    <label for="ps-xauusdm-secure-percentage" class="block text-sm font-medium mb-0.5">Secure Percentage (% of Profit):</label>
+                                    <input type="number" step="0.1" id="ps-xauusdm-secure-percentage" class="text-sm w-full">
+                                </div>
+                                 <hr class="my-2 border-gray-300 dark:border-gray-600">
+                                <label class="flex items-center text-sm mt-2"><input type="checkbox" id="ps-xauusdm-trailing-active" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500"> Activate Trailing Stop</label>
+                                <div id="ps-xauusdm-trailing-options" style="display:none;" class="ml-4 space-y-2 mt-1">
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Trailing Stop Configuration:</p>
+                                    <div>
+                                        <label for="ps-xauusdm-trailing-method" class="block text-sm font-medium mb-0.5">Trailing Method:</label>
+                                        <select id="ps-xauusdm-trailing-method" class="text-sm w-full">
+                                            <option value="fixed_pips_behind">Fixed Pips Behind Price</option>
+                                            <option value="atr_multiplier">ATR Multiplier</option>
+                                            <option value="percentage_of_peak_profit">Percentage of Peak Profit</option>
+                                        </select>
+                                    </div>
+                                    <div id="ps-xauusdm-trailing-fixed-pips-group">
+                                        <label for="ps-xauusdm-trailing-fixed-pips-value" class="block text-sm font-medium mb-0.5">Trail Pips Behind:</label>
+                                        <input type="number" id="ps-xauusdm-trailing-fixed-pips-value" class="text-sm w-full">
+                                    </div>
+                                    <div id="ps-xauusdm-trailing-atr-group" style="display:none;">
+                                        <div><label for="ps-xauusdm-trailing-atr-multiplier" class="block text-sm font-medium mb-0.5">ATR Multiplier:</label><input type="number" step="0.1" id="ps-xauusdm-trailing-atr-multiplier" class="text-sm w-full"></div>
+                                        <div><label for="ps-xauusdm-trailing-atr-period" class="block text-sm font-medium mb-0.5">ATR Period:</label><input type="number" id="ps-xauusdm-trailing-atr-period" class="text-sm w-full"></div>
+                                    </div>
+                                    <div id="ps-xauusdm-trailing-percentage-group" style="display:none;">
+                                        <label for="ps-xauusdm-trailing-percentage-value" class="block text-sm font-medium mb-0.5">Secure % of Peak Profit:</label>
+                                        <input type="number" step="0.1" id="ps-xauusdm-trailing-percentage-value" class="text-sm w-full">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="btn-save-profit-securing-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Profit Securing Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">ADX Signal Filter</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center text-sm"><input type="checkbox" id="adx-filter-enabled" name="adx_signal_filter.enabled" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800"> Enabled</label>
+                        <div><label for="adx-filter-min-adx" class="text-sm">Min ADX for Entry (Default):</label><input type="number" id="adx-filter-min-adx" name="adx_signal_filter.min_adx_for_entry" class="mt-1 text-sm w-full"></div>
+                        <div><label for="adx-filter-min-adx-btcusdm" class="text-sm">Min ADX for Entry (BTCUSDm):</label><input type="number" id="adx-filter-min-adx-btcusdm" name="adx_signal_filter.min_adx_for_entry_BTCUSDm" class="mt-1 text-sm w-full" placeholder="e.g., 18"></div>
+                        <label class="flex items-center text-sm"><input type="checkbox" id="adx-filter-di-confirm" name="adx_signal_filter.require_di_confirmation" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800"> Require DI Confirmation</label>
+                        <div>
+                            <label for="adx-filter-mode" class="text-sm">Filter Mode:</label>
+                            <select id="adx-filter-mode" name="adx_signal_filter.filter_mode" class="mt-1 text-sm w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="all_others">All Other Strategies</option>
+                                <option value="specific_strategies">Specific Strategies</option>
+                            </select>
+                        </div>
+                        <div><label for="adx-filter-strategies-list" class="text-sm">Strategies to Filter (comma-separated, if specific):</label><input type="text" id="adx-filter-strategies-list" name="adx_signal_filter.strategies_to_filter" placeholder="KeltnerChannels,BollingerBands" class="mt-1 text-sm w-full"></div>
+                    </div>
+                    <button id="btn-save-adx-filter-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save ADX Filter Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">ADX Strategy Parameters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div><label for="adx-period" class="text-sm">ADX Period:</label><input type="number" id="adx-period" name="adx_period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="adx-di-period" class="text-sm">DI Period:</label><input type="number" id="adx-di-period" name="adx_di_period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="adx-threshold" class="text-sm">ADX Signal Threshold:</label><input type="number" id="adx-threshold" name="adx_threshold" class="mt-1 text-sm w-full"></div>
+                        <div><label for="adx-strength-factor" class="text-sm">Strength Factor:</label><input type="number" step="0.01" id="adx-strength-factor" name="adx_strength_factor" class="mt-1 text-sm w-full"></div>
+                    </div>
+                    <button id="btn-save-adx-strategy-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save ADX Strategy Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Keltner Channels Strategy Parameters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div><label for="keltner-ema-period" class="text-sm">EMA Period:</label><input type="number" id="keltner-ema-period" name="keltner_ema_period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="keltner-atr-period" class="text-sm">ATR Period:</label><input type="number" id="keltner-atr-period" name="keltner_atr_period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="keltner-atr-multiplier" class="text-sm">ATR Multiplier:</label><input type="number" step="0.1" id="keltner-atr-multiplier" name="keltner_atr_multiplier" class="mt-1 text-sm w-full"></div>
+                        <div><label for="keltner-signal-strength" class="text-sm">Signal Strength:</label><input type="number" step="0.1" id="keltner-signal-strength" name="keltner_signal_strength" class="mt-1 text-sm w-full"></div>
+                    </div>
+                    <button id="btn-save-keltner-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Keltner Channels Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Time-Based Exit</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center text-sm"><input type="checkbox" id="time-exit-enabled" class="mr-2 h-4 w-4 rounded"> Enabled</label>
+                        <div><label for="time-exit-apply-tfs" class="text-sm">Apply to Timeframes (comma-sep, e.g., M5,M15):</label><input type="text" id="time-exit-apply-tfs" class="mt-1 text-sm w-full"></div>
+
+                        <h4 class="text-sm font-medium mt-2 text-gray-600 dark:text-gray-400">Default Settings:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 ml-4">
+                            <div><label for="time-exit-default-max-bars" class="text-xs">Max Bars Open:</label><input type="number" id="time-exit-default-max-bars" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-default-min-profit" class="text-xs">Min Profit to Consider (Pips):</label><input type="number" id="time-exit-default-min-profit" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-default-adx-thresh" class="text-xs">Momentum Fade ADX Threshold:</label><input type="number" id="time-exit-default-adx-thresh" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-default-rsi-buy" class="text-xs">Momentum Fade RSI Buy Exit (&lt;):</label><input type="number" id="time-exit-default-rsi-buy" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-default-rsi-sell" class="text-xs">Momentum Fade RSI Sell Exit (&gt;):</label><input type="number" id="time-exit-default-rsi-sell" class="mt-1 text-sm w-full"></div>
+                        </div>
+
+                        <h4 class="text-sm font-medium mt-2 text-gray-600 dark:text-gray-400">BTCUSDm M5 Override:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 ml-4">
+                            <div><label for="time-exit-btcm5-max-bars" class="text-xs">Max Bars Open:</label><input type="number" id="time-exit-btcm5-max-bars" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-btcm5-min-profit" class="text-xs">Min Profit (Pips):</label><input type="number" id="time-exit-btcm5-min-profit" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-btcm5-adx-thresh" class="text-xs">Fade ADX Thresh:</label><input type="number" id="time-exit-btcm5-adx-thresh" class="mt-1 text-sm w-full"></div>
+                        </div>
+                        <h4 class="text-sm font-medium mt-2 text-gray-600 dark:text-gray-400">BTCUSDm M15 Override:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 ml-4"> <div><label for="time-exit-btcm15-max-bars" class="text-xs">Max Bars Open:</label><input type="number" id="time-exit-btcm15-max-bars" class="mt-1 text-sm w-full"></div>
+                            <div><label for="time-exit-btcm15-min-profit" class="text-xs">Min Profit (Pips):</label><input type="number" id="time-exit-btcm15-min-profit" class="mt-1 text-sm w-full"></div>
+                            </div>
+                    </div>
+                    <button id="btn-save-time-exit-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Time-Based Exit Settings</button>
+                </section>
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Scalping Strategy Parameters (M1 Timeframe)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                        <div><label for="scalping-fast-ema" class="text-sm">Fast EMA Period:</label><input type="number" id="scalping-fast-ema" class="mt-1 text-sm w-full"></div>
+                        <div><label for="scalping-rsi-period" class="text-sm">RSI Period:</label><input type="number" id="scalping-rsi-period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="scalping-rsi-oversold" class="text-sm">RSI Oversold:</label><input type="number" id="scalping-rsi-oversold" class="mt-1 text-sm w-full"></div>
+                        <div><label for="scalping-rsi-overbought" class="text-sm">RSI Overbought:</label><input type="number" id="scalping-rsi-overbought" class="mt-1 text-sm w-full"></div>
+                        <div><label for="scalping-volume-factor" class="text-sm">Volume Factor:</label><input type="number" step="0.1" id="scalping-volume-factor" class="mt-1 text-sm w-full" placeholder="e.g., 1.5"></div>
+                        <div><label for="scalping-atr-period" class="text-sm">Volatility ATR Period:</label><input type="number" id="scalping-atr-period" class="mt-1 text-sm w-full"></div>
+                        <div><label for="scalping-min-volatility" class="text-sm">Min Volatility Factor:</label><input type="number" step="0.0001" id="scalping-min-volatility" class="mt-1 text-sm w-full" placeholder="e.g., 0.0001"></div>
+                        <div><label for="scalping-max-volatility" class="text-sm">Max Volatility Factor:</label><input type="number" step="0.0001" id="scalping-max-volatility" class="mt-1 text-sm w-full" placeholder="e.g., 0.005"></div>
+                        <!-- NEW CHECKBOXES -->
+                        <div class="sm:col-span-1 flex items-center pt-4">
+                            <input type="checkbox" id="scalping-use-volume-filter" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="scalping-use-volume-filter" class="ml-2 text-sm">Enable Volume Filter</label>
+                        </div>
+                        <div class="sm:col-span-1 flex items-center pt-4">
+                            <input type="checkbox" id="scalping-use-volatility-filter" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="scalping-use-volatility-filter" class="ml-2 text-sm">Enable Volatility Filter</label>
+                        </div>
+                    </div>
+                    <button id="btn-save-scalping-settings" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Scalping Settings</button>
+                </section>
+
+
+                <section class="card p-4 md:p-6">
+                    <h3 class="card-title">Auto-Close (Short Timeframes: M1, M5, M15, M30)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-700 dark:text-gray-300">Profit Taking:</h4>
+                            <div class="ml-4 space-y-3">
+                                <label class="flex items-center text-sm"><input type="checkbox" id="stf-profit-enabled" name="auto_close_short_tf_profit_take.enabled" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800"> Enabled</label>
+                                <div><label for="stf-tp-ratio" class="text-sm">TP Distance Ratio (0.1-1.0):</label><input type="number" step="0.05" id="stf-tp-ratio" name="auto_close_short_tf_profit_take.tp_distance_ratio" class="mt-1 text-sm w-full"></div>
+                                <div><label for="stf-ema-short" class="text-sm">Trend EMA Short:</label><input type="number" id="stf-ema-short" name="auto_close_short_tf_profit_take.trend_ema_short" class="mt-1 text-sm w-full"></div>
+                                <div><label for="stf-ema-long" class="text-sm">Trend EMA Long:</label><input type="number" id="stf-ema-long" name="auto_close_short_tf_profit_take.trend_ema_long" class="mt-1 text-sm w-full"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-700 dark:text-gray-300">Stop Loss:</h4>
+                             <div class="ml-4 space-y-3">
+                                <label class="flex items-center text-sm"><input type="checkbox" id="stf-loss-enabled" name="auto_close_short_tf_stop_loss.enabled" class="mr-2 h-4 w-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-600 dark:ring-offset-gray-800"> Enabled</label>
+                                <div><label for="stf-sl-ratio" class="text-sm">SL Distance Ratio (0.1-1.0):</label><input type="number" step="0.05" id="stf-sl-ratio" name="auto_close_short_tf_stop_loss.sl_distance_ratio" class="mt-1 text-sm w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="btn-save-short-tf-autoclose" class="btn btn-primary mt-6 text-sm py-2 px-3">Save Short-TF Auto-Close</button>
+                </section>
+            </div>
+
+            <div id="bot-logs" class="tab-content">
+                <h2 class="text-xl md:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Bot Activity Logs</h2>
+                <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
+                    <label for="log-level-filter" class="whitespace-nowrap text-sm font-medium">Filter by Level:</label>
+                    <select id="log-level-filter" class="p-2 border rounded-md w-full sm:w-auto text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-600 dark:focus:border-blue-600">
+                        <option value="ALL">ALL</option><option value="DEBUG">DEBUG</option>
+                        <option value="INFO">INFO</option><option value="WARNING">WARNING</option>
+                        <option value="ERROR">ERROR</option><option value="CRITICAL">CRITICAL</option>
+                    </select>
+                    <button id="btn-refresh-logs" class="btn btn-secondary text-sm py-2 px-3">Refresh Logs</button>
+                    <button id="btn-download-log" class="btn btn-secondary text-sm py-2 px-3">Download Full Log</button>
+                    <button id="btn-delete-logs" class="btn btn-danger text-sm py-2 px-3 ml-auto">Delete All Logs</button>
+                </div>
+                <div class="card p-0"> <pre id="log-display-area" class="text-xs whitespace-pre-wrap max-h-[60vh] overflow-y-auto p-3 md:p-4 rounded-md bg-gray-50 dark:bg-gray-900"></pre> </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="mt5CredentialsModal" class="fixed inset-0 z-[1060] flex items-center justify-center overflow-y-auto hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-60 modal-backdrop-blur transition-opacity" aria-hidden="true"></div>
+        <div class="relative mt5-modal-content rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8 mx-4 my-8 transform transition-all scale-95 opacity-0" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 id="modal-title" class="text-xl font-semibold leading-6">MT5 LOGIN</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your MetaTrader 5 connection details.</p>
+                </div>
+                <button id="closeMt5ModalBtn" type="button" class="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                    <span class="sr-only">Close</span>
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+
+            <form id="mt5CredentialsForm" class="mt-6 space-y-4">
+                <div>
+                    <label for="mt5ModalLogin" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Login ID</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="number" id="mt5ModalLogin" name="login" class="mt5-modal-input block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-md" placeholder="12345678" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="mt5ModalPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="password" id="mt5ModalPassword" name="password" class="mt5-modal-input block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-md" placeholder="••••••••">
+                    </div>
+                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave blank to keep current password.</p>
+                </div>
+                <div>
+                    <label for="mt5ModalServer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Server</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-server text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="text" id="mt5ModalServer" name="server" class="mt5-modal-input block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-md" placeholder="YourBroker-ServerName" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="mt5ModalPath" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Terminal Path (Optional)</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-folder-open text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <input type="text" id="mt5ModalPath" name="mt5_terminal_path" class="mt5-modal-input block w-full pl-10 pr-3 py-2.5 sm:text-sm rounded-md" placeholder="e.g., C:\Program Files\MetaTrader 5\terminal64.exe">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Usually not needed if MT5 is in your system PATH.</p>
+                </div>
+
+                <div id="mt5ModalFormMessage" class="text-sm mt-3"></div>
+
+
+                <div class="pt-5">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelMt5ModalBtn" class="btn btn-secondary text-sm py-2 px-4">Cancel</button>
+                        <button type="submit" id="saveMt5ModalBtn" class="btn mt5-modal-button-primary text-sm py-2 px-4 flex items-center justify-center">
+                            <i class="fas fa-save mr-2"></i>Save & Reconnect
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-5 right-5 space-y-2 z-[1050]"></div>
+
+<script>
+    // --- Global Variables & Constants ---
+    const API_BASE_URL = "";
+    const sidebar = document.getElementById('nav-sidebar');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    const contentOverlay = document.getElementById('content-overlay');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    let equityChartInstance;
+
+    // --- MT5 Modal Elements ---
+    const mt5Modal = document.getElementById('mt5CredentialsModal');
+    const openMt5SettingsBtnHeader = document.getElementById('openMt5SettingsBtnHeader');
+    const openMt5SettingsBtnSettingsTab = document.getElementById('openMt5SettingsBtnSettingsTab');
+    const closeMt5ModalBtn = document.getElementById('closeMt5ModalBtn');
+    const cancelMt5ModalBtn = document.getElementById('cancelMt5ModalBtn');
+    const mt5CredsForm = document.getElementById('mt5CredentialsForm');
+    const saveMt5ModalBtn = document.getElementById('saveMt5ModalBtn');
+    const mt5ModalFormMessage = document.getElementById('mt5ModalFormMessage');
+
+
+    // --- Theme Toggle Functionality ---
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            if(themeToggleLightIcon) themeToggleLightIcon.classList.remove('hidden');
+            if(themeToggleDarkIcon) themeToggleDarkIcon.classList.add('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            if(themeToggleDarkIcon) themeToggleDarkIcon.classList.remove('hidden');
+            if(themeToggleLightIcon) themeToggleLightIcon.classList.add('hidden');
+        }
+        localStorage.setItem('theme', theme);
+        updateChartTheme();
+    }
+
+    // --- Mobile Navigation ---
+    function openMobileSidebar() {
+        if (sidebar) sidebar.classList.add('open');
+        if (contentOverlay) contentOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileSidebar() {
+        if (sidebar) sidebar.classList.remove('open');
+        if (contentOverlay) contentOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // --- Toast Notifications ---
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, duration);
+    }
+
+    // --- Tab Navigation ---
+    window.showTab = function(tabId) {
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        const activeLink = document.querySelector(`.nav-link[onclick*="showTab('${tabId}')"]`);
+        if (activeLink) activeLink.classList.add('active');
+
+        const activeContent = document.getElementById(tabId);
+        if (activeContent) activeContent.classList.add('active');
+
+        if (tabId === 'dashboard') renderEquityChart();
+        else if (tabId === 'settings') fetchAndPopulateConfig(); // This will handle ML models now
+        else if (tabId === 'trade-history') fetchTradeHistory();
+        else if (tabId === 'bot-logs') fetchLogs();
+        else if (tabId === 'open-trades') fetchOpenPositions();
+        else if (tabId === 'backtesting') initializeBacktestingTab();
+    };
+
+
+    // --- API Call Helper ---
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const url = API_BASE_URL ? `${API_BASE_URL}/api${endpoint}` : `/api${endpoint}`;
+        const options = { method, headers: {} };
+        if (method !== 'GET' && body) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
+        }
+        try {
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            let responseData;
+
+            if (contentType && contentType.includes('application/json')) {
+                responseData = await response.json();
+            } else {
+                const textResponse = await response.text();
+                try {
+                    responseData = JSON.parse(textResponse);
+                } catch (e) {
+                    responseData = { message: textResponse, error: `Response was not valid JSON: ${textResponse.substring(0,100)}...` };
+                     if (!response.ok) {
+                        console.error(`HTTP error! Status: ${response.status}, URL: ${url}, Non-JSON Response: `, textResponse);
+                        showToast(responseData.message || responseData.error || `HTTP error! Status: ${response.status}`, 'error');
+                        throw new Error(responseData.message || responseData.error || `HTTP error! Status: ${response.status}`);
+                     }
+                }
+            }
+
+            if (!response.ok) {
+                const errorMessage = responseData.message || responseData.error || `HTTP error! Status: ${response.status}`;
+                console.error(`HTTP error! Status: ${response.status}, URL: ${url}, Response: `, responseData);
+                showToast(errorMessage, 'error');
+                throw new Error(errorMessage);
+            }
+            return responseData;
+        } catch (error) {
+            console.error(`API call to ${url} failed:`, error);
+            if (!error.message || !error.message.toLowerCase().includes('http error')) {
+                showToast(`API Call Error: ${error.message || 'Unknown error'}. Check console. Ensure backend is running.`, 'error');
+            }
+            throw error;
+        }
+    }
+
+    // --- Bot Status Icons ---
+    const statusIcons = {
+        RUNNING: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+        PAUSED: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+        STOPPED: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.563A.562.562 0 019 14.437V9.564z" /></svg>`,
+        ERROR: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" /></svg>`,
+        ERROR_IMPORT: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+        MT5_DISCONNECTED: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22a.75.75 0 01-1.06-1.06l6.22-6.22a.75.75 0 011.06 0zM19.503 3.97a.75.75 0 010 1.06l-14.47 14.47a.75.75 0 01-1.06-1.06l14.47-14.47a.75.75 0 011.06 0zM12.97 3.97a.75.75 0 011.06 0l6.22 6.22a.75.75 0 01-1.06 1.06l-6.22-6.22a.75.75 0 010-1.06zM3.97 11.03a.75.75 0 011.06 0l6.22 6.22a.75.75 0 01-1.06 1.06l-6.22-6.22a.75.75 0 010-1.06z" /></svg>`,
+        UNINITIALIZED: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>`,
+        ERROR_API: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>`,
+        UNKNOWN: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>`
+    };
+    const getStatusIcon = (status) => statusIcons[status] || statusIcons.UNKNOWN;
+
+    // --- Equity Curve Chart ---
+    function getChartColors() {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        return {
+            borderColor: isDarkMode ? 'rgba(59, 130, 246, 0.8)' : 'rgba(37, 99, 235, 0.8)',
+            backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+            gridColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(229, 231, 235, 0.5)',
+            ticksColor: isDarkMode ? '#9ca3af' : '#4b5563',
+            pointBackgroundColor: isDarkMode ? '#3b82f6' : '#2563eb'
+        };
+    }
+
+    async function renderEquityChart() {
+        const ctx = document.getElementById('equityCurveChart')?.getContext('2d');
+        if (!ctx) {
+            console.error('Equity chart canvas not found.');
+            return;
+        }
+
+        let dataForChart = { labels: ["Loading..."], equity: [0] };
+
+        try {
+            const equityApiResponse = await apiCall('/equity_curve?limit=70');
+            if (equityApiResponse && Array.isArray(equityApiResponse.labels) && Array.isArray(equityApiResponse.equity) && equityApiResponse.labels.length > 0 && equityApiResponse.equity.length > 0) {
+                dataForChart = equityApiResponse;
+            } else if (equityApiResponse && Array.isArray(equityApiResponse.labels) && Array.isArray(equityApiResponse.equity) && equityApiResponse.labels.length === 0 && equityApiResponse.equity.length === 0) {
+                dataForChart = { labels: ["No Data Yet"], equity: [0] };
+            }
+            else {
+                console.error('Equity data from API is not in expected format or is empty:', equityApiResponse);
+                showToast('Failed to load chart data or data is malformed.', 'error');
+                dataForChart = { labels: ["Data Error"], equity: [0] };
+            }
+        } catch (error) {
+            console.error('Failed to fetch equity curve data:', error);
+            dataForChart = { labels: ["Fetch Error"], equity: [0] };
+        }
+
+        const chartConfigData = {
+            labels: dataForChart.labels,
+            datasets: [{
+                label: 'Equity',
+                data: dataForChart.equity,
+                fill: true,
+                tension: 0.1,
+                pointRadius: 2,
+                pointHoverRadius: 5
+            }]
+        };
+
+        const colors = getChartColors();
+        chartConfigData.datasets[0].borderColor = colors.borderColor;
+        chartConfigData.datasets[0].backgroundColor = colors.backgroundColor;
+        chartConfigData.datasets[0].pointBackgroundColor = colors.pointBackgroundColor;
+
+        if (equityChartInstance) {
+            equityChartInstance.destroy();
+        }
+
+        equityChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: chartConfigData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: { color: colors.gridColor, borderColor: colors.gridColor },
+                        ticks: {
+                            color: colors.ticksColor,
+                            callback: function(value) { return '$' + value.toLocaleString(); }
+                        }
+                    },
+                    x: {
+                        grid: { display: false, borderColor: colors.gridColor },
+                        ticks: { color: colors.ticksColor, maxRotation: 0, autoSkipPadding: 20 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: document.documentElement.classList.contains('dark') ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255,255,255,0.9)',
+                        titleColor: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
+                        bodyColor: document.documentElement.classList.contains('dark') ? '#d1d5db' : '#374151',
+                        borderColor: document.documentElement.classList.contains('dark') ? '#4b5563' : '#e5e7eb',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return ` Equity: $${context.parsed.y.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    function updateChartTheme() {
+        if (!equityChartInstance) return;
+        const colors = getChartColors();
+        equityChartInstance.data.datasets[0].borderColor = colors.borderColor;
+        equityChartInstance.data.datasets[0].backgroundColor = colors.backgroundColor;
+        equityChartInstance.data.datasets[0].pointBackgroundColor = colors.pointBackgroundColor;
+        equityChartInstance.options.scales.y.grid.color = colors.gridColor;
+        equityChartInstance.options.scales.y.grid.borderColor = colors.gridColor;
+        equityChartInstance.options.scales.y.ticks.color = colors.ticksColor;
+        equityChartInstance.options.scales.x.ticks.color = colors.ticksColor;
+
+        equityChartInstance.options.plugins.tooltip.backgroundColor = document.documentElement.classList.contains('dark') ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255,255,255,0.9)';
+        equityChartInstance.options.plugins.tooltip.titleColor = document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937';
+        equityChartInstance.options.plugins.tooltip.bodyColor = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#374151';
+        equityChartInstance.options.plugins.tooltip.borderColor = document.documentElement.classList.contains('dark') ? '#4b5563' : '#e5e7eb';
+
+        equityChartInstance.update();
+    }
+
+
+    // --- Data Fetching and UI Updates ---
+    function updateClock() {
+        const now = new Date();
+        const timeEl = document.getElementById('current-time-utc');
+        if(timeEl) timeEl.textContent = now.toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' }) + ' UTC';
+    }
+
+       async function fetchBotStatus() {
+        try {
+            const data = await apiCall('/status');
+            const statusIndicator = document.getElementById('bot-status-indicator');
+            const mobileBalanceEl = document.getElementById('account-balance-mobile');
+            const mobileEquityEl = document.getElementById('account-equity-mobile');
+            const mobileFreeMarginEl = document.getElementById('free-margin-mobile');
+            const statBalanceEl = document.getElementById('stat-balance');
+            const statEquityEl = document.getElementById('stat-equity');
+
+            if (statusIndicator) {
+                const statusKey = data.bot_status || 'UNKNOWN';
+                statusIndicator.className = `status-indicator status-${statusKey}`;
+                statusIndicator.innerHTML = `${getStatusIcon(statusKey)} ${statusKey.replace(/_/g, ' ')}`;
+            }
+
+            const setVal = (el, val, prefix = '$', suffix = '', fixed = 2) => {
+                const valNum = Number(val);
+                if(el) el.textContent = (val !== "N/A" && val !== null && val !== undefined && !isNaN(valNum)) ? `${prefix}${valNum.toFixed(fixed)}${suffix}` : "N/A";
+            };
+
+            setVal(document.getElementById('account-balance'), data.balance);
+            if(mobileBalanceEl) setVal(mobileBalanceEl, data.balance, '$', '', 0);
+            if(statBalanceEl) setVal(statBalanceEl, data.balance, '$', '', 2);
+
+            setVal(document.getElementById('account-equity'), data.equity);
+            if(mobileEquityEl) setVal(mobileEquityEl, data.equity, '$', '', 0);
+            if(statEquityEl) setVal(statEquityEl, data.equity, '$', '', 2);
+
+            setVal(document.getElementById('free-margin'), data.free_margin);
+            if(mobileFreeMarginEl) setVal(mobileFreeMarginEl, data.free_margin, '$', '', 0);
+
+            const marginLevelEl = document.getElementById('margin-level');
+            if (marginLevelEl) setVal(marginLevelEl, data.margin_level, '', '%');
+
+            const botStatusElem = document.getElementById('botStatus');
+            const tradingPausedElem = document.getElementById('tradingPaused');
+            const consecutiveLossesElem = document.getElementById('consecutiveLosses');
+
+            if (botStatusElem) botStatusElem.textContent = data.bot_status || 'N/A';
+            if (tradingPausedElem) tradingPausedElem.textContent = data.trading_paused ? 'Yes' : 'No';
+            if (consecutiveLossesElem) consecutiveLossesElem.textContent = data.consecutive_losses !== undefined ? data.consecutive_losses : 'N/A';
+
+            const resumeTradingBtnInStatsCard = document.getElementById('resumeTradingBtn');
+            if (resumeTradingBtnInStatsCard) {
+                resumeTradingBtnInStatsCard.disabled = !data.trading_paused;
+            }
+
+            // *** MODIFIED SECTION START ***
+            const togglePauseResumeBtn = document.getElementById('btn-pause-resume-trading');
+            const startBotBtn = document.getElementById('btn-start-bot');
+            const stopBotBtn = document.getElementById('btn-stop-bot');
+
+            if (togglePauseResumeBtn) {
+                // Store the paused state in a data attribute for reliable access
+                togglePauseResumeBtn.dataset.paused = data.trading_paused;
+
+                if (data.bot_status === 'RUNNING') {
+                    if (startBotBtn) startBotBtn.disabled = true;
+                    if (stopBotBtn) stopBotBtn.disabled = false;
+                    togglePauseResumeBtn.disabled = false;
+
+                    if (data.trading_paused) {
+                        togglePauseResumeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>RESUME TRADES`;
+                        togglePauseResumeBtn.classList.add('btn-primary');
+                        togglePauseResumeBtn.classList.remove('btn-secondary');
+                    } else {
+                        togglePauseResumeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>PAUSE TRADES`;
+                        togglePauseResumeBtn.classList.add('btn-secondary');
+                        togglePauseResumeBtn.classList.remove('btn-primary');
+                    }
+                } else { // Bot is STOPPED, ERROR, etc.
+                    if (startBotBtn) startBotBtn.disabled = false;
+                    if (stopBotBtn) stopBotBtn.disabled = true;
+                    togglePauseResumeBtn.disabled = true;
+                    togglePauseResumeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>PAUSE TRADES`;
+                    togglePauseResumeBtn.classList.add('btn-secondary');
+                    togglePauseResumeBtn.classList.remove('btn-primary');
+                }
+            }
+             // *** MODIFIED SECTION END ***
+
+            const consLossEl = document.getElementById('consecutive-losses');
+            if(consLossEl) consLossEl.textContent = data.consecutive_losses === null || data.consecutive_losses === undefined ? '0' : data.consecutive_losses;
+
+            const lastRetrainEl = document.getElementById('last-ml-retrain');
+            if(lastRetrainEl) lastRetrainEl.textContent = data.last_ml_retrain || "Never";
+
+            const lastErrorDiv = document.getElementById('last-error-message-dashboard');
+            if (lastErrorDiv) {
+                if (data.last_error) {
+                    lastErrorDiv.textContent = `Last Error: ${data.last_error}`;
+                    lastErrorDiv.style.display = 'block';
+                } else {
+                    lastErrorDiv.style.display = 'none';
+                }
+            }
+
+        } catch (error) { /* API call errors handled by apiCall itself */ }
+    }
+
+
+    async function fetchOpenPositions() {
+        try {
+            const positions = await apiCall('/open_positions');
+            const tableBody = document.getElementById('open-trades-table-body');
+            const summaryDiv = document.getElementById('open-positions-summary');
+            const statOpenTradesEl = document.getElementById('stat-open-trades');
+
+            if (!tableBody || !summaryDiv) return;
+
+            tableBody.innerHTML = '';
+            summaryDiv.innerHTML = '';
+            if(statOpenTradesEl) statOpenTradesEl.textContent = '0';
+
+
+            if (!positions || positions.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="14" class="table-cell text-center text-gray-500 dark:text-gray-400 py-4">No open positions.</td></tr>';
+                summaryDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">No open trades.</p>';
+                const sessionPlEl = document.getElementById('session-pl');
+                if(sessionPlEl) {
+                    sessionPlEl.textContent = '$0.00';
+                    sessionPlEl.className = 'text-2xl md:text-3xl font-semibold mt-1 text-gray-800 dark:text-gray-100';
+                }
+                return;
+            }
+
+            if(statOpenTradesEl) statOpenTradesEl.textContent = positions.length;
+            let totalSessionPl = 0;
+            positions.forEach(trade => {
+                totalSessionPl += parseFloat(trade.pnl_currency) || 0;
+                const row = tableBody.insertRow();
+                const pnlClass = parseFloat(trade.pnl_currency) > 0 ? 'text-green-600 dark:text-green-400' : (parseFloat(trade.pnl_currency) < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300');
+                const pnlPipsClass = parseFloat(trade.pnl_pips) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const typeClass = trade.type === 'BUY' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const displayDigits = (trade.symbol && (trade.symbol.includes('JPY') || trade.symbol.includes('XAU'))) ? 3 : 5;
+
+
+                row.className = `table-row ${parseFloat(trade.pnl_currency) > 0 ? 'bg-green-50 dark:bg-green-900/20' : (parseFloat(trade.pnl_currency) < 0 ? 'bg-red-50 dark:bg-red-900/20' : '')}`;
+                row.innerHTML = `
+                    <td class="table-cell font-medium">${trade.symbol}</td><td class="table-cell">${trade.ticket}</td>
+                    <td class="table-cell ${typeClass} font-semibold">${trade.type}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.volume) || 0).toFixed(2)}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.entry_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.current_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right hidden sm:table-cell">${(parseFloat(trade.sl) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right hidden sm:table-cell">${(parseFloat(trade.tp) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right ${pnlPipsClass}">${(parseFloat(trade.pnl_pips) || 0).toFixed(1)}</td>
+                    <td class="table-cell text-right ${pnlClass} font-semibold">$${(parseFloat(trade.pnl_currency) || 0).toFixed(2)}</td>
+                    <td class="table-cell hidden md:table-cell">${trade.entry_time ? new Date(trade.entry_time).toLocaleString() : 'N/A'}</td>
+                    <td class="table-cell hidden lg:table-cell">${trade.entry_tf || 'N/A'}</td>
+                    <td class="table-cell text-xs hidden lg:table-cell">${trade.comment || ''}</td>
+                    <td class="table-cell text-center"><button class="btn btn-danger btn-sm text-xs py-1 px-2" onclick="manualCloseTrade(${trade.ticket})">Close</button></td>
+                `;
+                const summaryP = document.createElement('p');
+                summaryP.className = 'py-1 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
+                summaryP.innerHTML = `${trade.symbol} | ${trade.type} | Vol: ${(parseFloat(trade.volume) || 0).toFixed(2)} | P/L: <span class="${pnlClass} font-semibold">$${(parseFloat(trade.pnl_currency) || 0).toFixed(2)}</span>`;
+                summaryDiv.appendChild(summaryP);
+            });
+            const sessionPlEl = document.getElementById('session-pl');
+             if(sessionPlEl) {
+                sessionPlEl.textContent = `${totalSessionPl >= 0 ? '+' : ''}$${totalSessionPl.toFixed(2)}`;
+                sessionPlEl.className = `text-2xl md:text-3xl font-semibold mt-1 ${totalSessionPl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+            }
+        } catch (error) { /* API call errors handled by apiCall itself */ }
+    }
+
+    async function fetchTradeHistory(page = 1, limit = 20) {
+        try {
+            const data = await apiCall(`/trade_history?page=${page}&limit=${limit}`);
+            const tableBody = document.getElementById('trade-history-table-body');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '';
+            if (!data.trades || data.trades.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="13" class="table-cell text-center text-gray-500 dark:text-gray-400 py-4">No trade history found.</td></tr>';
+                return;
+            }
+            data.trades.forEach(trade => {
+                const row = tableBody.insertRow();
+                const pnlClass = parseFloat(trade.profit_loss) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const typeClass = trade.type === 'BUY' || trade.signal === 'BUY' ? 'text-green-600 dark:text-green-400' : (trade.type === 'SELL' || trade.signal === 'SELL' ? 'text-red-600 dark:text-red-400' : '');
+                const displayDigits = (trade.symbol && (trade.symbol.includes('JPY') || trade.symbol.includes('XAU'))) ? 3 : 5;
+
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <td class="table-cell font-medium">${trade.symbol || 'N/A'}</td>
+                    <td class="table-cell">${trade.ticket || 'N/A'}</td>
+                    <td class="table-cell ${typeClass} font-semibold">${trade.type || 'N/A'}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.volume) || 0).toFixed(2)}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.entry_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right hidden sm:table-cell">${(parseFloat(trade.sl_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right hidden sm:table-cell">${(parseFloat(trade.tp_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right">${(parseFloat(trade.exit_price) || 0).toFixed(displayDigits)}</td>
+                    <td class="table-cell text-right ${pnlClass} font-semibold">$${(parseFloat(trade.profit_loss) || 0).toFixed(2)}</td>
+                    <td class="table-cell hidden md:table-cell">${trade.entry_time ? new Date(trade.entry_time).toLocaleString() : 'N/A'}</td>
+                    <td class="table-cell hidden md:table-cell">${trade.exit_time ? new Date(trade.exit_time).toLocaleString() : 'N/A'}</td>
+                    <td class="table-cell hidden lg:table-cell">${trade.entry_tf || 'N/A'}</td>
+                    <td class="table-cell text-xs hidden sm:table-cell">${trade.exit_reason || 'N/A'}</td>
+                `;
+            });
+        } catch (error) { /* API call errors handled by apiCall itself */ }
+    }
+
+    async function fetchLogs() {
+        const levelFilterEl = document.getElementById('log-level-filter');
+        const levelFilter = levelFilterEl ? levelFilterEl.value : 'ALL';
+        try {
+            const logs = await apiCall(`/logs?limit=100&level=${levelFilter}`);
+            const logArea = document.getElementById('log-display-area');
+            if(!logArea) return;
+            if (logs && logs.length > 0) {
+                logArea.textContent = logs.join('\n');
+            } else {
+                logArea.textContent = "No logs found for the selected filter or logs have been cleared.";
+            }
+        } catch (error) {
+            const logArea = document.getElementById('log-display-area');
+            if(logArea) logArea.textContent = "Error loading logs. Backend might be down.";
+        }
+    }
+
+    // --- Profit Securing Conditional Fields ---
+    function setupConditionalPsFields(prefix) {
+        const secureTypeSelect = document.getElementById(`${prefix}-secure-type`);
+        const trailingActiveCheckbox = document.getElementById(`${prefix}-trailing-active`);
+        const trailingMethodSelect = document.getElementById(`${prefix}-trailing-method`);
+
+        if (secureTypeSelect) {
+            secureTypeSelect.addEventListener('change', (e) => updateSecureProfitFields(prefix, e.target.value));
+            updateSecureProfitFields(prefix, secureTypeSelect.value); // Initial call
+        }
+        if (trailingActiveCheckbox) {
+            trailingActiveCheckbox.addEventListener('change', (e) => updateTrailingActiveFields(prefix, e.target.checked));
+            updateTrailingActiveFields(prefix, trailingActiveCheckbox.checked); // Initial call
+        }
+        if (trailingMethodSelect) {
+            trailingMethodSelect.addEventListener('change', (e) => updateTrailingMethodFields(prefix, e.target.value));
+            if (trailingActiveCheckbox && trailingActiveCheckbox.checked) {
+                updateTrailingMethodFields(prefix, trailingMethodSelect.value);
+            }
+        }
+    }
+
+    function updateSecureProfitFields(prefix, selectedType) {
+        const fixedPipsGroup = document.getElementById(`${prefix}-secure-fixed-pips-group`);
+        const percentageGroup = document.getElementById(`${prefix}-secure-percentage-group`);
+        if (!fixedPipsGroup || !percentageGroup) return;
+
+        fixedPipsGroup.style.display = (selectedType === 'fixed_pips') ? 'block' : 'none';
+        percentageGroup.style.display = (selectedType === 'percentage_of_profit') ? 'block' : 'none';
+    }
+
+    function updateTrailingActiveFields(prefix, isActive) {
+        const trailingOptionsDiv = document.getElementById(`${prefix}-trailing-options`);
+        if (!trailingOptionsDiv) return;
+        trailingOptionsDiv.style.display = isActive ? 'block' : 'none';
+        if (isActive) {
+            const trailingMethodSelect = document.getElementById(`${prefix}-trailing-method`);
+            if (trailingMethodSelect) {
+                updateTrailingMethodFields(prefix, trailingMethodSelect.value);
+            }
+        }
+    }
+
+    function updateTrailingMethodFields(prefix, selectedMethod) {
+        const fixedPipsGroup = document.getElementById(`${prefix}-trailing-fixed-pips-group`);
+        const atrGroup = document.getElementById(`${prefix}-trailing-atr-group`);
+        const percentageGroup = document.getElementById(`${prefix}-trailing-percentage-group`);
+
+        if (!fixedPipsGroup || !atrGroup || !percentageGroup) return;
+
+        fixedPipsGroup.style.display = 'none';
+        atrGroup.style.display = 'none';
+        percentageGroup.style.display = 'none';
+
+        if (selectedMethod === 'fixed_pips_behind') {
+            fixedPipsGroup.style.display = 'block';
+        } else if (selectedMethod === 'atr_multiplier') {
+            atrGroup.style.display = 'block';
+        } else if (selectedMethod === 'percentage_of_peak_profit') {
+            percentageGroup.style.display = 'block';
+        }
+    }
+
+    // New function to populate ML model dropdown
+    async function populateMLModelSelector() {
+        const selectEl = document.getElementById('ml-model-type');
+        if (!selectEl) return;
+        try {
+            const data = await apiCall('/ml_models');
+            selectEl.innerHTML = '';
+            if (data.models && data.models.length > 0) {
+                data.models.forEach(modelName => {
+                    const option = document.createElement('option');
+                    option.value = modelName;
+                    option.textContent = modelName;
+                    selectEl.appendChild(option);
+                });
+            } else {
+                selectEl.innerHTML = '<option value="">No models available</option>';
+            }
+        } catch (error) {
+            console.error("Error populating ML models:", error);
+            selectEl.innerHTML = '<option value="">Error loading models</option>';
+        }
+    }
+
+
+    async function fetchAndPopulateConfig() {
+        try {
+            const config = await apiCall('/config');
+            if(!config || config.error) {
+                showToast(config.error || 'Failed to load config data.', 'error');
+                return;
+            }
+
+
+            // Populate Scalping Strategy Settings including new checkboxes
+            const scalpConfig = config.scalping_strategy_params || {};
+            document.getElementById('scalping-fast-ema').value = scalpConfig.fast_ema_period !== undefined ? scalpConfig.fast_ema_period : 10;
+            document.getElementById('scalping-rsi-period').value = scalpConfig.rsi_period !== undefined ? scalpConfig.rsi_period : 7;
+            document.getElementById('scalping-rsi-oversold').value = scalpConfig.rsi_oversold !== undefined ? scalpConfig.rsi_oversold : 30;
+            document.getElementById('scalping-rsi-overbought').value = scalpConfig.rsi_overbought !== undefined ? scalpConfig.rsi_overbought : 70;
+            document.getElementById('scalping-volume-factor').value = scalpConfig.volume_factor !== undefined ? scalpConfig.volume_factor : 1.5;
+            document.getElementById('scalping-atr-period').value = scalpConfig.atr_period_volatility !== undefined ? scalpConfig.atr_period_volatility : 14;
+            document.getElementById('scalping-min-volatility').value = scalpConfig.min_volatility_factor !== undefined ? scalpConfig.min_volatility_factor : 0.0001;
+            document.getElementById('scalping-max-volatility').value = scalpConfig.max_volatility_factor !== undefined ? scalpConfig.max_volatility_factor : 0.005;
+            document.getElementById('scalping-use-volume-filter').checked = scalpConfig.use_volume_filter !== undefined ? scalpConfig.use_volume_filter : true;
+            document.getElementById('scalping-use-volatility-filter').checked = scalpConfig.use_volatility_filter !== undefined ? scalpConfig.use_volatility_filter : true;
+
+
+            // Populate ML Model Selector
+            await populateMLModelSelector();
+            document.getElementById('ml-model-type').value = config.ml_model_type || 'RandomForest';
+
+            // General bot settings
+            document.getElementById('monitoring-interval').value = config.monitoring_interval_seconds || 60;
+            document.getElementById('cooldown-period').value = config.cooldown_period_minutes || 15;
+            document.getElementById('max-consecutive-losses').value = config.max_consecutive_losses || 3;
+            // Populate new max_trades_per_symbol
+            document.getElementById('max-trades-per-symbol').value = config.max_trades_per_symbol !== undefined ? config.max_trades_per_symbol : 2;
+
+
+            // H1 Trend Filter
+            const h1FilterConf = config.h1_trend_filter || {};
+            document.getElementById('h1-filter-enabled').checked = h1FilterConf.enabled !== undefined ? h1FilterConf.enabled : true;
+            document.getElementById('h1-filter-allow-neutral').checked = h1FilterConf.allow_neutral !== undefined ? h1FilterConf.allow_neutral : true;
+
+
+            document.getElementById('risk-percent').value = config.risk_percent_per_trade || 0.005;
+
+            const stfProfit = config.auto_close_short_tf_profit_take || {};
+            document.getElementById('stf-profit-enabled').checked = stfProfit.enabled !== undefined ? stfProfit.enabled : true;
+            document.getElementById('stf-tp-ratio').value = stfProfit.tp_distance_ratio || 0.5;
+            document.getElementById('stf-ema-short').value = stfProfit.trend_ema_short || 9;
+            document.getElementById('stf-ema-long').value = stfProfit.trend_ema_long || 21;
+
+            const stfLoss = config.auto_close_short_tf_stop_loss || {};
+            document.getElementById('stf-loss-enabled').checked = stfLoss.enabled !== undefined ? stfLoss.enabled : true;
+            document.getElementById('stf-sl-ratio').value = stfLoss.sl_distance_ratio || 0.5;
+
+            const adxFilterConf = config.adx_signal_filter || {};
+            document.getElementById('adx-filter-enabled').checked = adxFilterConf.enabled !== undefined ? adxFilterConf.enabled : true;
+            document.getElementById('adx-filter-min-adx').value = adxFilterConf.min_adx_for_entry || 20;
+            document.getElementById('adx-filter-min-adx-btcusdm').value = adxFilterConf.min_adx_for_entry_BTCUSDm || 18;
+            document.getElementById('adx-filter-di-confirm').checked = adxFilterConf.require_di_confirmation !== undefined ? adxFilterConf.require_di_confirmation : true;
+            document.getElementById('adx-filter-mode').value = adxFilterConf.filter_mode || "all_others";
+            document.getElementById('adx-filter-strategies-list').value = (adxFilterConf.strategies_to_filter || []).join(',');
+
+            document.getElementById('adx-period').value = config.adx_period || 14;
+            document.getElementById('adx-di-period').value = config.adx_di_period || 14;
+            document.getElementById('adx-threshold').value = config.adx_threshold || 25;
+            document.getElementById('adx-strength-factor').value = config.adx_strength_factor || 0.02;
+
+            document.getElementById('keltner-ema-period').value = config.keltner_ema_period || 20;
+            document.getElementById('keltner-atr-period').value = config.keltner_atr_period || 10;
+            document.getElementById('keltner-atr-multiplier').value = config.keltner_atr_multiplier || 2.0;
+            document.getElementById('keltner-signal-strength').value = config.keltner_signal_strength || 0.7;
+
+            // Populate Profit-Securing Stop Loss
+            const psConfig = config.profit_securing_stop_loss || {};
+            document.getElementById('ps-enabled').checked = psConfig.enabled !== undefined ? psConfig.enabled : true;
+
+            function populatePsBlock(prefix, blockConfig, defaultConfig) {
+                const getVal = (key, fallback) => blockConfig && blockConfig[key] !== undefined ? blockConfig[key] : (defaultConfig && defaultConfig[key] !== undefined ? defaultConfig[key] : fallback);
+
+                document.getElementById(`${prefix}-trigger-profit`).value = getVal('trigger_profit_pips', 50);
+
+                const secureType = getVal('secure_profit_type', 'fixed_pips');
+                document.getElementById(`${prefix}-secure-type`).value = secureType;
+                document.getElementById(`${prefix}-secure-fixed-pips`).value = getVal('secure_profit_fixed_pips', 10);
+                document.getElementById(`${prefix}-secure-percentage`).value = getVal('secure_profit_percentage', 50);
+
+                const trailingActive = getVal('trailing_active', false);
+                document.getElementById(`${prefix}-trailing-active`).checked = trailingActive;
+
+                const trailingMethod = getVal('trailing_method', 'fixed_pips_behind');
+                document.getElementById(`${prefix}-trailing-method`).value = trailingMethod;
+                document.getElementById(`${prefix}-trailing-fixed-pips-value`).value = getVal('trailing_fixed_pips_value', 20);
+                document.getElementById(`${prefix}-trailing-atr-multiplier`).value = getVal('trailing_atr_multiplier_value', 2);
+                document.getElementById(`${prefix}-trailing-atr-period`).value = getVal('trailing_atr_period', 14);
+                document.getElementById(`${prefix}-trailing-percentage-value`).value = getVal('trailing_percentage_value', 70);
+
+                updateSecureProfitFields(prefix, secureType);
+                updateTrailingActiveFields(prefix, trailingActive);
+            }
+
+            const psDefaultConf = psConfig.default_settings || {};
+            const psBtcConf = psConfig.BTCUSDm || {};
+            const psXauConf = psConfig.XAUUSDm || {};
+
+            populatePsBlock('ps-default', psDefaultConf, {});
+            populatePsBlock('ps-btcusdm', psBtcConf, psDefaultConf);
+            populatePsBlock('ps-xauusdm', psXauConf, psDefaultConf);
+
+            const timeExitConfig = config.time_based_exit || {};
+            const timeExitDefault = timeExitConfig.default || {};
+            const timeExitBtcM5 = timeExitConfig.BTCUSDm_M5 || {};
+            const timeExitBtcM15 = timeExitConfig.BTCUSDm_M15 || {};
+
+            document.getElementById('time-exit-enabled').checked = timeExitConfig.enabled !== undefined ? timeExitConfig.enabled : true;
+            document.getElementById('time-exit-apply-tfs').value = (timeExitConfig.apply_to_timeframes || ["M5", "M15"]).join(',');
+            document.getElementById('time-exit-default-max-bars').value = timeExitDefault.max_bars_open || 12;
+            document.getElementById('time-exit-default-min-profit').value = timeExitDefault.min_profit_pips_to_consider || 30;
+            document.getElementById('time-exit-default-adx-thresh').value = timeExitDefault.momentum_fade_adx_threshold || 22;
+            document.getElementById('time-exit-default-rsi-buy').value = timeExitDefault.momentum_fade_rsi_buy_exit || 48;
+            document.getElementById('time-exit-default-rsi-sell').value = timeExitDefault.momentum_fade_rsi_sell_exit || 52;
+            document.getElementById('time-exit-btcm5-max-bars').value = timeExitBtcM5.max_bars_open || (timeExitDefault.max_bars_open || 10);
+            document.getElementById('time-exit-btcm5-min-profit').value = timeExitBtcM5.min_profit_pips_to_consider || (timeExitDefault.min_profit_pips_to_consider || 100);
+            document.getElementById('time-exit-btcm5-adx-thresh').value = timeExitBtcM5.momentum_fade_adx_threshold || (timeExitDefault.momentum_fade_adx_threshold || 20);
+            document.getElementById('time-exit-btcm15-max-bars').value = timeExitBtcM15.max_bars_open || (timeExitDefault.max_bars_open || 8);
+            document.getElementById('time-exit-btcm15-min-profit').value = timeExitBtcM15.min_profit_pips_to_consider || (timeExitDefault.min_profit_pips_to_consider || 150);
+
+
+        } catch (error) { /* API call errors handled by apiCall itself */ }
+    }
+
+    // --- MT5 Modal Show/Hide and Data Load ---
+    async function openMt5Modal() {
+        if (!mt5Modal) return;
+        mt5Modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            mt5Modal.querySelector('.relative').classList.remove('scale-95', 'opacity-0');
+            mt5Modal.querySelector('.relative').classList.add('scale-100', 'opacity-100');
+        });
+
+        if (mt5ModalFormMessage) {
+            mt5ModalFormMessage.textContent = '';
+            mt5ModalFormMessage.className = 'text-sm mt-3';
+        }
+        if (saveMt5ModalBtn) {
+            saveMt5ModalBtn.disabled = false;
+            saveMt5ModalBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save & Reconnect';
+        }
+
+        try {
+            const config = await apiCall('/config');
+            if (config && config.mt5_credentials) {
+                const loginValue = config.mt5_credentials.login;
+                document.getElementById('mt5ModalLogin').value = (typeof loginValue === 'number' && !isNaN(loginValue)) ? loginValue : '';
+                document.getElementById('mt5ModalPassword').value = '';
+                document.getElementById('mt5ModalServer').value = config.mt5_credentials.server || '';
+                document.getElementById('mt5ModalPath').value = config.mt5_credentials.mt5_terminal_path || '';
+            } else {
+                mt5CredsForm.reset();
+            }
+        } catch (error) {
+            showToast('Could not load current MT5 settings.', 'error');
+            if (mt5ModalFormMessage) {
+                mt5ModalFormMessage.textContent = 'Error loading settings. Check console.';
+                mt5ModalFormMessage.className = 'text-sm mt-3 text-red-500 dark:text-red-400';
+            }
+            mt5CredsForm.reset();
+        }
+    }
+
+    function closeMt5Modal() {
+        if (!mt5Modal) return;
+        mt5Modal.querySelector('.relative').classList.add('scale-95', 'opacity-0');
+        mt5Modal.querySelector('.relative').classList.remove('scale-100', 'opacity-100');
+        setTimeout(() => {
+            mt5Modal.classList.add('hidden');
+        }, 300);
+    }
+
+
+    // --- Control Actions ---
+    document.getElementById('btn-start-bot')?.addEventListener('click', () => apiCall('/control/start_bot', 'POST').then(data => { if(data) {showToast(data.message, data.status === "RELOADED_WITH_MT5_ERROR" || data.status === "MT5_DISCONNECTED" ? 'error' : (data.success ? 'success' : 'error')); fetchBotStatus();} }).catch(err => { /* Handled by apiCall */ }));
+    document.getElementById('btn-stop-bot')?.addEventListener('click', () => {
+        if (confirm("Are you sure you want to stop the bot?")) {
+            apiCall('/control/stop_bot', 'POST').then(data => { if(data) {showToast(data.message, data.success ? 'success' : 'error'); fetchBotStatus();} }).catch(err => {});
+        }
+    });
+
+    // *** MODIFIED CLICK HANDLER ***
+    document.getElementById('btn-pause-resume-trading')?.addEventListener('click', async (event) => {
+        const btn = event.currentTarget;
+        // Read the reliable state from the data attribute
+        const isCurrentlyPaused = btn.dataset.paused === 'true';
+        const endpoint = isCurrentlyPaused ? '/control/resume_trading' : '/control/pause_trading';
+        try {
+            const data = await apiCall(endpoint, 'POST');
+            if(data) {
+                showToast(data.message, data.success ? 'success' : 'error');
+                fetchBotStatus(); // Re-fetch status to update button immediately
+            }
+        } catch (error) {
+            // Error handling is already done by apiCall
+        }
+    });
+
+    document.getElementById('btn-trigger-retrain')?.addEventListener('click', () => apiCall('/control/trigger_retrain', 'POST').then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {}));
+    document.getElementById('btn-force-full-ml-training')?.addEventListener('click', () => {
+    if (confirm("DANGER! This will delete all current ML models and start a full, potentially long, initial training. Bot will be stopped during this. Continue?")) {
+        apiCall('/control/force_full_ml_training', 'POST')
+            .then(data => {
+                if(data) {
+                    showToast(data.message, data.success ? 'success' : 'error', 8000);
+                    fetchBotStatus();
+                }
+            })
+            .catch(err => {});
+        }
+    });
+
+
+    async function manualCloseTrade(ticketId) {
+        if (!ticketId || isNaN(parseInt(ticketId))) { showToast('Invalid Ticket ID.', 'error'); return; }
+        if (confirm(`Are you sure you want to manually close trade ticket ${ticketId}?`)) {
+            try {
+                const data = await apiCall(`/control/close_trade/${ticketId}`, 'POST');
+                if(data){ showToast(data.message, data.success ? 'success' : 'error'); fetchOpenPositions(); fetchBotStatus(); }
+            } catch (error) {}
+        }
+    }
+
+    // --- Settings Saving ---
+    document.getElementById('btn-save-ml-settings')?.addEventListener('click', () => {
+        const payload = {
+            ml_model_type: document.getElementById('ml-model-type').value
+        };
+        apiCall('/config/update', 'POST', payload)
+            .then(data => { if(data) showToast(data.message, data.success ? 'success' : 'error') })
+            .catch(err => {});
+    });
+
+    document.getElementById('btn-save-op-settings')?.addEventListener('click', () => {
+        const payload = {
+            monitoring_interval_seconds: parseInt(document.getElementById('monitoring-interval').value) || 60,
+            cooldown_period_minutes: parseInt(document.getElementById('cooldown-period').value) || 15,
+            max_consecutive_losses: parseInt(document.getElementById('max-consecutive-losses').value) || 3,
+            max_trades_per_symbol: parseInt(document.getElementById('max-trades-per-symbol').value) || 2 // Added new field
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    document.getElementById('btn-save-h1-filter-settings')?.addEventListener('click', () => {
+        const payload = {
+            h1_trend_filter: {
+                enabled: document.getElementById('h1-filter-enabled').checked,
+                allow_neutral: document.getElementById('h1-filter-allow-neutral').checked
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    document.getElementById('btn-save-risk-settings')?.addEventListener('click', () => {
+        const payload = { risk_percent_per_trade: parseFloat(document.getElementById('risk-percent').value) || 0.005 };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+     });
+    document.getElementById('btn-save-short-tf-autoclose')?.addEventListener('click', () => {
+        const payload = {
+            auto_close_short_tf_profit_take: {
+                enabled: document.getElementById('stf-profit-enabled').checked,
+                tp_distance_ratio: parseFloat(document.getElementById('stf-tp-ratio').value) || 0.5,
+                trend_ema_short: parseInt(document.getElementById('stf-ema-short').value) || 9,
+                trend_ema_long: parseInt(document.getElementById('stf-ema-long').value) || 21
+            },
+            auto_close_short_tf_stop_loss: {
+                enabled: document.getElementById('stf-loss-enabled').checked,
+                sl_distance_ratio: parseFloat(document.getElementById('stf-sl-ratio').value) || 0.5
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    document.getElementById('btn-save-adx-filter-settings')?.addEventListener('click', () => {
+        const strategiesToFilterArray = document.getElementById('adx-filter-strategies-list').value
+                                            .split(',')
+                                            .map(s => s.trim())
+                                            .filter(s => s.length > 0);
+        const payload = {
+            adx_signal_filter: {
+                enabled: document.getElementById('adx-filter-enabled').checked,
+                min_adx_for_entry: parseInt(document.getElementById('adx-filter-min-adx').value) || 20,
+                min_adx_for_entry_BTCUSDm: parseInt(document.getElementById('adx-filter-min-adx-btcusdm').value) || 18,
+                require_di_confirmation: document.getElementById('adx-filter-di-confirm').checked,
+                filter_mode: document.getElementById('adx-filter-mode').value,
+                strategies_to_filter: strategiesToFilterArray
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    document.getElementById('btn-save-adx-strategy-settings')?.addEventListener('click', () => {
+        const payload = {
+            adx_period: parseInt(document.getElementById('adx-period').value) || 14,
+            adx_di_period: parseInt(document.getElementById('adx-di-period').value) || 14,
+            adx_threshold: parseInt(document.getElementById('adx-threshold').value) || 25,
+            adx_strength_factor: parseFloat(document.getElementById('adx-strength-factor').value) || 0.02
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    document.getElementById('btn-save-keltner-settings')?.addEventListener('click', () => {
+        const payload = {
+            keltner_ema_period: parseInt(document.getElementById('keltner-ema-period').value) || 20,
+            keltner_atr_period: parseInt(document.getElementById('keltner-atr-period').value) || 10,
+            keltner_atr_multiplier: parseFloat(document.getElementById('keltner-atr-multiplier').value) || 2.0,
+            keltner_signal_strength: parseFloat(document.getElementById('keltner-signal-strength').value) || 0.7
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    // Save Profit-Securing Settings
+    document.getElementById('btn-save-profit-securing-settings')?.addEventListener('click', () => {
+        function getPsBlockData(prefix) {
+            return {
+                trigger_profit_pips: parseInt(document.getElementById(`${prefix}-trigger-profit`).value) || 0,
+                secure_profit_type: document.getElementById(`${prefix}-secure-type`).value,
+                secure_profit_fixed_pips: parseInt(document.getElementById(`${prefix}-secure-fixed-pips`).value) || 0,
+                secure_profit_percentage: parseFloat(document.getElementById(`${prefix}-secure-percentage`).value) || 0,
+                trailing_active: document.getElementById(`${prefix}-trailing-active`).checked,
+                trailing_method: document.getElementById(`${prefix}-trailing-method`).value,
+                trailing_fixed_pips_value: parseInt(document.getElementById(`${prefix}-trailing-fixed-pips-value`).value) || 0,
+                trailing_atr_multiplier_value: parseFloat(document.getElementById(`${prefix}-trailing-atr-multiplier`).value) || 0,
+                trailing_atr_period: parseInt(document.getElementById(`${prefix}-trailing-atr-period`).value) || 0,
+                trailing_percentage_value: parseFloat(document.getElementById(`${prefix}-trailing-percentage-value`).value) || 0,
+            };
+        }
+
+        const payload = {
+            profit_securing_stop_loss: {
+                enabled: document.getElementById('ps-enabled').checked,
+                default_settings: getPsBlockData('ps-default'),
+                BTCUSDm: getPsBlockData('ps-btcusdm'),
+                XAUUSDm: getPsBlockData('ps-xauusdm')
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+
+    // Save Time-Based Exit Settings
+    document.getElementById('btn-save-time-exit-settings')?.addEventListener('click', () => {
+        const applyTFs = document.getElementById('time-exit-apply-tfs').value.split(',').map(s => s.trim()).filter(s => s);
+        const payload = {
+            time_based_exit: {
+                enabled: document.getElementById('time-exit-enabled').checked,
+                apply_to_timeframes: applyTFs,
+                default: {
+                    max_bars_open: parseInt(document.getElementById('time-exit-default-max-bars').value) || 12,
+                    min_profit_pips_to_consider: parseInt(document.getElementById('time-exit-default-min-profit').value) || 30,
+                    momentum_fade_adx_threshold: parseInt(document.getElementById('time-exit-default-adx-thresh').value) || 22,
+                    momentum_fade_rsi_buy_exit: parseInt(document.getElementById('time-exit-default-rsi-buy').value) || 48,
+                    momentum_fade_rsi_sell_exit: parseInt(document.getElementById('time-exit-default-rsi-sell').value) || 52
+                },
+                BTCUSDm_M5: {
+                    max_bars_open: parseInt(document.getElementById('time-exit-btcm5-max-bars').value) || 10,
+                    min_profit_pips_to_consider: parseInt(document.getElementById('time-exit-btcm5-min-profit').value) || 100,
+                    momentum_fade_adx_threshold: parseInt(document.getElementById('time-exit-btcm5-adx-thresh').value) || 20
+                },
+                 BTCUSDm_M15: {
+                    max_bars_open: parseInt(document.getElementById('time-exit-btcm15-max-bars').value) || 8,
+                    min_profit_pips_to_consider: parseInt(document.getElementById('time-exit-btcm15-min-profit').value) || 150
+                }
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+    // Save Scalping Strategy Settings
+    document.getElementById('btn-save-scalping-settings')?.addEventListener('click', () => {
+        const payload = {
+            scalping_strategy_params: {
+                fast_ema_period: parseInt(document.getElementById('scalping-fast-ema').value) || 10,
+                rsi_period: parseInt(document.getElementById('scalping-rsi-period').value) || 7,
+                rsi_oversold: parseInt(document.getElementById('scalping-rsi-oversold').value) || 30,
+                rsi_overbought: parseInt(document.getElementById('scalping-rsi-overbought').value) || 70,
+                volume_factor: parseFloat(document.getElementById('scalping-volume-factor').value) || 1.5,
+                atr_period_volatility: parseInt(document.getElementById('scalping-atr-period').value) || 14,
+                min_volatility_factor: parseFloat(document.getElementById('scalping-min-volatility').value) || 0.0001,
+                max_volatility_factor: parseFloat(document.getElementById('scalping-max-volatility').value) || 0.005,
+                use_volume_filter: document.getElementById('scalping-use-volume-filter').checked,
+                use_volatility_filter: document.getElementById('scalping-use-volatility-filter').checked
+            }
+        };
+        apiCall('/config/update', 'POST', payload).then(data => {if(data)showToast(data.message, data.success ? 'success' : 'error')}).catch(err => {});
+    });
+
+
+    // --- Log related buttons ---
+    document.getElementById('btn-refresh-logs')?.addEventListener('click', fetchLogs);
+    document.getElementById('log-level-filter')?.addEventListener('change', fetchLogs);
+
+    document.getElementById('btn-download-log')?.addEventListener('click', () => {
+        window.location.href = `${API_BASE_URL}/api/download_log`;
+    });
+
+    document.getElementById('btn-delete-logs')?.addEventListener('click', async () => {
+        if (confirm("Are you sure you want to delete ALL bot logs? This action cannot be undone.")) {
+            try {
+                const data = await apiCall('/control/delete_logs', 'POST');
+                if(data) {
+                    showToast(data.message, data.success ? 'success' : 'error');
+                    if(data.success) {
+                        fetchLogs();
+                    }
+                }
+            } catch (error) { /* Handled by apiCall */ }
+        }
+    });
+
+    // --- Backtesting Specific Functions ---
+    let currentBotConfigForBacktestParams = null;
+
+    async function fetchBotConfigForBacktestDefaults() {
+        if (currentBotConfigForBacktestParams) return currentBotConfigForBacktestParams;
+        try {
+            currentBotConfigForBacktestParams = await apiCall('/config');
+            return currentBotConfigForBacktestParams;
+        } catch (e) {
+            console.error("Failed to fetch bot config for backtest param defaults:", e);
+            return {};
+        }
+    }
+
+    async function populateBacktestStrategies() {
+        const selectEl = document.getElementById('backtest-strategy');
+        if (!selectEl) return;
+        try {
+            const data = await apiCall('/backtest/strategies');
+            selectEl.innerHTML = '';
+            if (data.strategies && data.strategies.length > 0) {
+                data.strategies.forEach(strategyName => {
+                    const option = document.createElement('option');
+                    option.value = strategyName;
+                    option.textContent = strategyName;
+                    selectEl.appendChild(option);
+                });
+                if (selectEl.value) {
+                    updateStrategySpecificParamsFields(selectEl.value);
+                }
+            } else {
+                selectEl.innerHTML = '<option value="">No strategies available</option>';
+            }
+        } catch (error) {
+            console.error("Error populating backtest strategies:", error);
+            selectEl.innerHTML = '<option value="">Error loading strategies</option>';
+        }
+    }
+
+    async function updateStrategySpecificParamsFields(strategyName) {
+        const paramsFieldsDiv = document.getElementById('strategy-specific-params-fields');
+        if (!paramsFieldsDiv) return;
+        paramsFieldsDiv.innerHTML = '';
+
+        const config = await fetchBotConfigForBacktestDefaults();
+
+        function createParamInput(label, id, value, type = 'number', step = 'any', placeholder = '') {
+            return `
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <label for="${id}" class="text-xs col-span-1">${label}:</label>
+                    <input type="${type}" id="${id}" name="${id}" value="${value !== undefined && value !== null ? value : ''}" step="${step}" placeholder="${placeholder}" class="text-xs w-full col-span-2 p-1.5 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+            `;
+        }
+
+        paramsFieldsDiv.innerHTML += createParamInput('Stop Loss %', 'param_sl_pct', 0.02, 'number', '0.001', 'e.g., 0.02 for 2%');
+        paramsFieldsDiv.innerHTML += createParamInput('Take Profit %', 'param_tp_pct', 0.04, 'number', '0.001', 'e.g., 0.04 for 4%');
+
+
+        if (strategyName === 'SMA') {
+            paramsFieldsDiv.innerHTML +=
+                createParamInput('Short Period', 'param_short_period', config.sma_short_period || 10) +
+                createParamInput('Long Period', 'param_long_period', config.sma_long_period || 100);
+        } else if (strategyName === 'BollingerBands') {
+            paramsFieldsDiv.innerHTML +=
+                createParamInput('Window', 'param_window', config.bb_window || 20) +
+                createParamInput('Std Dev', 'param_std_dev', config.bb_std_dev || 2.0, 'number', '0.1');
+        } else if (strategyName === 'LiquiditySweep') {
+            paramsFieldsDiv.innerHTML += createParamInput('Period', 'param_period', config.liquidity_sweep_period || 10);
+        } else if (strategyName === 'MalaysianSnR') {
+             paramsFieldsDiv.innerHTML +=
+                createParamInput('SnR Window', 'param_window', config.snr_window || 10) +
+                createParamInput('Freshness Window', 'param_freshness_window', config.snr_freshness_window || 3) +
+                createParamInput('Threshold', 'param_threshold', config.snr_threshold || 0.003, 'number', '0.0001');
+        } else if (strategyName === 'SMC') {
+            paramsFieldsDiv.innerHTML +=
+                createParamInput('Min OB Size', 'param_min_ob_size', config.smc_min_ob_size || 0.0003, 'number', '0.0001') +
+                createParamInput('FVG Threshold (SMC)', 'param_fvg_threshold', config.smc_fvg_threshold || 0.0003, 'number', '0.0001') +
+                createParamInput('Liquidity Tolerance', 'param_liquidity_tolerance', config.smc_liquidity_tolerance || 0.005, 'number', '0.0001') +
+                createParamInput('Trade Cooldown (min)', 'param_trade_cooldown', config.smc_trade_cooldown || 30);
+        } else if (strategyName === 'Fibonacci') {
+            const fibLevelsDefault = (config.fibonacci_levels || [0.382, 0.5, 0.618]).join(', ');
+            paramsFieldsDiv.innerHTML += createParamInput('Levels (comma-sep)', 'param_levels', fibLevelsDefault, 'text', 'any', 'e.g., 0.382,0.5,0.618');
+            paramsFieldsDiv.innerHTML += createParamInput('Window', 'param_fib_window', config.fibonacci_window || 20);
+            paramsFieldsDiv.innerHTML += createParamInput('Proximity Factor', 'param_fib_proximity', config.fibonacci_proximity_factor || 0.015, 'number', '0.001');
+        } else if (strategyName === 'ADX') {
+            paramsFieldsDiv.innerHTML +=
+                createParamInput('ADX Period', 'param_adx_period', config.adx_period || 14) +
+                createParamInput('DI Period', 'param_di_period', config.adx_di_period || 14) +
+                createParamInput('ADX Signal Threshold', 'param_adx_threshold', config.adx_threshold || 25) +
+                createParamInput('Strength Factor', 'param_strength_factor', config.adx_strength_factor || 0.02, 'number', '0.001');
+        } else if (strategyName === 'KeltnerChannels') {
+            paramsFieldsDiv.innerHTML +=
+                createParamInput('EMA Period', 'param_ema_period', config.keltner_ema_period || 20) +
+                createParamInput('ATR Period', 'param_atr_period', config.keltner_atr_period || 10) +
+                createParamInput('ATR Multiplier', 'param_atr_multiplier', config.keltner_atr_multiplier || 2.0, 'number', '0.1') +
+                createParamInput('Signal Strength', 'param_signal_strength', config.keltner_signal_strength || 0.7, 'number', '0.1');
+        } else if (strategyName === 'Scalping') { // Added Scalping parameters here
+             paramsFieldsDiv.innerHTML +=
+                createParamInput('Fast EMA Period', 'param_fast_ema_period', config.scalping_strategy_params?.fast_ema_period || 10) +
+                createParamInput('RSI Period', 'param_rsi_period', config.scalping_strategy_params?.rsi_period || 7) +
+                createParamInput('RSI Oversold', 'param_rsi_oversold', config.scalping_strategy_params?.rsi_oversold || 30) +
+                createParamInput('RSI Overbought', 'param_rsi_overbought', config.scalping_strategy_params?.rsi_overbought || 70) +
+                createParamInput('Volume Factor', 'param_volume_factor', config.scalping_strategy_params?.volume_factor || 1.5, 'number', '0.1') +
+                createParamInput('ATR Period', 'param_atr_period_volatility', config.scalping_strategy_params?.atr_period_volatility || 14) +
+                createParamInput('Min Volatility Factor', 'param_min_volatility_factor', config.scalping_strategy_params?.min_volatility_factor || 0.0001, 'number', '0.0001') +
+                createParamInput('Max Volatility Factor', 'param_max_volatility_factor', config.scalping_strategy_params?.max_volatility_factor || 0.005, 'number', '0.0001');
+
+            // Add checkboxes for Scalping strategy specific filters
+            const volumeFilterChecked = config.scalping_strategy_params?.use_volume_filter !== undefined ? config.scalping_strategy_params.use_volume_filter : true;
+            const volatilityFilterChecked = config.scalping_strategy_params?.use_volatility_filter !== undefined ? config.scalping_strategy_params.use_volatility_filter : true;
+
+            paramsFieldsDiv.innerHTML += `
+                <div class="sm:col-span-1 flex items-center pt-4 col-span-3">
+                    <input type="checkbox" id="param_use_volume_filter" name="param_use_volume_filter" ${volumeFilterChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <label for="param_use_volume_filter" class="ml-2 text-sm">Enable Volume Filter</label>
+                </div>
+                <div class="sm:col-span-1 flex items-center pt-4 col-span-3">
+                    <input type="checkbox" id="param_use_volatility_filter" name="param_use_volatility_filter" ${volatilityFilterChecked ? 'checked' : ''} class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <label for="param_use_volatility_filter" class="ml-2 text-sm">Enable Volatility Filter</label>
+                </div>
+            `;
+        }
+        else {
+            paramsFieldsDiv.innerHTML += '<p class="text-xs text-gray-500 dark:text-gray-400">No specific parameters for this strategy in UI, or strategy not fully configured for UI backtest params. Default SL/TP % will be used.</p>';
+        }
+    }
+
+    document.getElementById('backtest-strategy')?.addEventListener('change', (event) => {
+        updateStrategySpecificParamsFields(event.target.value);
+    });
+
+
+    document.getElementById('backtest-form')?.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const runButton = document.getElementById('btn-run-backtest');
+        const resultsSection = document.getElementById('backtest-results-section');
+        const spinner = document.getElementById('backtest-spinner');
+        const outputDiv = document.getElementById('backtest-output');
+        const plotIframe = document.getElementById('backtest-plot-iframe');
+        const plotMessage = document.getElementById('backtest-plot-message');
+
+        const originalButtonHTML = runButton.innerHTML;
+        runButton.disabled = true;
+        runButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Running Backtest...';
+
+        resultsSection.classList.remove('hidden');
+        spinner.classList.remove('hidden');
+        outputDiv.classList.add('hidden');
+        plotIframe.src = 'about:blank';
+        plotMessage.classList.add('hidden');
+
+
+        const strategyName = document.getElementById('backtest-strategy').value;
+        const strategyParamsPayload = {};
+        const paramFieldsDiv = document.getElementById('strategy-specific-params-fields');
+        paramFieldsDiv.querySelectorAll('input, select').forEach(input => { // Include select for trailing method
+            const paramKey = input.id.replace('param_', '');
+            if (input.type === 'checkbox') {
+                strategyParamsPayload[paramKey] = input.checked;
+            } else if (input.name === 'param_levels' && input.type === 'text') {
+                strategyParamsPayload[paramKey] = input.value.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            } else {
+                strategyParamsPayload[paramKey] = input.type === 'number' ? parseFloat(input.value) : input.value;
+            }
+        });
+
+
+        const payload = {
+            symbol: document.getElementById('backtest-symbol').value,
+            timeframe: document.getElementById('backtest-timeframe').value,
+            strategy_name: strategyName,
+            start_date: document.getElementById('backtest-start-date').value,
+            end_date: document.getElementById('backtest-end-date').value,
+            initial_cash: parseFloat(document.getElementById('backtest-initial-cash').value),
+            commission_bps: parseFloat(document.getElementById('backtest-commission-bps').value),
+            ml_enabled: document.getElementById('backtest-ml-enabled').checked,
+            strategy_params: strategyParamsPayload
+        };
+
+        try {
+            const results = await apiCall('/backtest/run', 'POST', payload);
+            spinner.classList.add('hidden');
+            outputDiv.classList.remove('hidden');
+
+            if (results.error) {
+                showToast(`Backtest Run Error: ${results.error}`, 'error', 6000);
+                document.getElementById('backtest-stats-summary').innerHTML = `<p class="col-span-full text-red-600 dark:text-red-400 p-4">Error: ${results.error}</p>`;
+                document.getElementById('all-stats-json').textContent = JSON.stringify(results, null, 2);
+                plotMessage.textContent = 'Plot generation failed or not available due to error.';
+                plotMessage.classList.remove('hidden');
+                document.getElementById('backtest-trades-table-body').innerHTML = '<tr><td colspan="10" class="table-cell text-center py-4">No trades to display.</td></tr>';
+            } else {
+                showToast('Backtest completed successfully!', 'success');
+                displayBacktestRunResults(results);
+            }
+        } catch (error) {
+            spinner.classList.add('hidden');
+            outputDiv.classList.remove('hidden');
+            const errorMsg = error.message || 'An unknown error occurred during the backtest request.';
+            showToast(`Backtest Request Failed: ${errorMsg}`, 'error', 6000);
+            document.getElementById('backtest-stats-summary').innerHTML = `<p class="col-span-full text-red-600 dark:text-red-400 p-4">Request Error: ${errorMsg}</p>`;
+            document.getElementById('all-stats-json').textContent = `Error: ${errorMsg}`;
+            plotMessage.textContent = 'Plot could not be generated due to request error.';
+            plotMessage.classList.remove('hidden');
+             document.getElementById('backtest-trades-table-body').innerHTML = '<tr><td colspan="10" class="table-cell text-center py-4">No trades to display.</td></tr>';
+        } finally {
+            runButton.disabled = false;
+            runButton.innerHTML = originalButtonHTML;
+        }
+    });
+
+    function displayBacktestRunResults(results) {
+        const statsSummaryDiv = document.getElementById('backtest-stats-summary');
+        const allStatsPre = document.getElementById('all-stats-json');
+        const plotIframe = document.getElementById('backtest-plot-iframe');
+        const plotMessage = document.getElementById('backtest-plot-message');
+        const tradesTableBody = document.getElementById('backtest-trades-table-body');
+
+        statsSummaryDiv.innerHTML = '';
+        tradesTableBody.innerHTML = '';
+
+        if (results.stats && typeof results.stats === 'object') {
+            const s = results.stats;
+            const metricsToShow = {
+                "Start": s.Start, "End": s.End, "Duration": s.Duration,
+                "Equity Final [$]": s['Equity Final [$]'], "Equity Peak [$]": s['Equity Peak [$]'],
+                "Return [%]": s['Return [%]'], "Buy & Hold Return [%]": s['Buy & Hold Return [%]'],
+                "Max. Drawdown [%]": s['Max. Drawdown [%]'], "Avg. Drawdown [%]": s['Avg. Drawdown [%]'],
+                "Win Rate [%]": s['Win Rate [%]'], "# Trades": s['# Trades'],
+                "Best Trade [%]": s['Best Trade [%]'], "Worst Trade [%]": s['Worst Trade [%]'],
+                "Avg. Trade [%]": s['Avg. Trade [%]'],
+                "Profit Factor": s['Profit Factor'], "SQN": s['SQN'],
+                "Sharpe Ratio": s['Sharpe Ratio'], "Sortino Ratio": s['Sortino Ratio'], "Calmar Ratio": s['Calmar Ratio']
+            };
+
+            for (const key in metricsToShow) {
+                let val = metricsToShow[key];
+                if (typeof val === 'number') val = val.toFixed(2);
+                if (val === undefined || val === null) val = 'N/A';
+
+                const card = document.createElement('div');
+                card.className = 'bg-gray-100 dark:bg-gray-700/30 p-2.5 rounded-md shadow-sm';
+                card.innerHTML = `<h4 class="text-xs text-gray-500 dark:text-gray-400 truncate" title="${key}">${key}</h4><p class="text-sm md:text-md font-semibold text-gray-800 dark:text-gray-100">${val}</p>`;
+                statsSummaryDiv.appendChild(card);
+            }
+
+            allStatsPre.textContent = JSON.stringify(s, (key, value) => {
+                 if (key === '_equity_curve' || key === '_trades') return undefined;
+                 if (value === null) return "N/A";
+                 if (typeof value === 'number' && !Number.isInteger(value)) return parseFloat(value.toFixed(4));
+                 return value;
+            }, 2);
+
+        } else {
+            statsSummaryDiv.innerHTML = '<p class="col-span-full text-gray-500 dark:text-gray-400">No statistics available for this backtest.</p>';
+            allStatsPre.textContent = 'No statistics available.';
+        }
+
+        if (results.plot_file) {
+            plotIframe.src = results.plot_file + '?r=' + new Date().getTime();
+            plotIframe.classList.remove('hidden');
+            plotMessage.classList.add('hidden');
+        } else {
+            plotIframe.src = 'about:blank';
+            plotIframe.classList.add('hidden');
+            plotMessage.textContent = 'Equity curve plot is not available.';
+            plotMessage.classList.remove('hidden');
+        }
+
+        if (results.trades && results.trades.length > 0) {
+            results.trades.forEach(trade => {
+                const row = tradesTableBody.insertRow();
+                row.className = 'table-row hover:bg-gray-50 dark:hover:bg-gray-700/50';
+                const pnlClass = parseFloat(trade.PnL) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                row.innerHTML = `
+                    <td class="table-cell px-2 py-1.5">${trade.EntryTime || 'N/A'}</td>
+                    <td class="table-cell px-2 py-1.5">${trade.ExitTime || 'N/A'}</td>
+                    <td class="table-cell px-2 py-1.5 ${trade.Direction === 'LONG' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}">${trade.Direction || 'N/A'}</td>
+                    <td class="table-cell text-right px-2 py-1.5">${(parseFloat(trade.Size) || 0).toFixed(4)}</td>
+                    <td class="table-cell text-right px-2 py-1.5">${(parseFloat(trade.EntryPrice) || 0).toFixed(5)}</td>
+                    <td class="table-cell text-right px-2 py-1.5">${(parseFloat(trade.ExitPrice) || 0).toFixed(5)}</td>
+                    <td class="table-cell text-right px-2 py-1.5">${(parseFloat(trade.SlPrice) || 0).toFixed(5)}</td>
+                    <td class="table-cell text-right px-2 py-1.5">${(parseFloat(trade.TpPrice) || 0).toFixed(5)}</td>
+                    <td class="table-cell text-right px-2 py-1.5 ${pnlClass} font-medium">${(parseFloat(trade.PnL) || 0).toFixed(2)}</td>
+                    <td class="table-cell text-right px-2 py-1.5 ${pnlClass}">${(parseFloat(trade['Return %']) || 0).toFixed(2)}%</td>
+                `;
+            });
+        } else {
+            tradesTableBody.innerHTML = '<tr><td colspan="10" class="table-cell text-center py-4 text-gray-500 dark:text-gray-400">No trades were executed in this backtest.</td></tr>';
+        }
+    }
+
+    function initializeBacktestingTab() {
+        populateBacktestStrategies();
+        const initialStrategy = document.getElementById('backtest-strategy')?.value;
+        if (initialStrategy) {
+            updateStrategySpecificParamsFields(initialStrategy);
+        }
+    }
+
+
+    // --- Initial Load & Intervals & Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const initialTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(initialTheme);
+
+        if(themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                applyTheme(newTheme);
+            });
+        }
+
+        if(hamburgerBtn) hamburgerBtn.addEventListener('click', openMobileSidebar);
+        if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeMobileSidebar);
+        if(contentOverlay) contentOverlay.addEventListener('click', closeMobileSidebar);
+
+        if (openMt5SettingsBtnHeader) openMt5SettingsBtnHeader.addEventListener('click', openMt5Modal);
+        if (openMt5SettingsBtnSettingsTab) openMt5SettingsBtnSettingsTab.addEventListener('click', openMt5Modal);
+        if (closeMt5ModalBtn) closeMt5ModalBtn.addEventListener('click', closeMt5Modal);
+        if (cancelMt5ModalBtn) cancelMt5ModalBtn.addEventListener('click', closeMt5Modal);
+        if (mt5Modal) {
+             mt5Modal.addEventListener('click', (event) => {
+                if (event.target === mt5Modal) {
+                    closeMt5Modal();
+                }
+            });
+        }
+
+
+        if (mt5CredsForm) {
+            mt5CredsForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                let originalButtonText = '<i class="fas fa-save mr-2"></i>Save & Reconnect';
+                if (saveMt5ModalBtn) {
+                    originalButtonText = saveMt5ModalBtn.innerHTML;
+                    saveMt5ModalBtn.disabled = true;
+                    saveMt5ModalBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connecting...';
+                }
+                if (mt5ModalFormMessage) {
+                    mt5ModalFormMessage.textContent = 'Attempting to save and reconnect...';
+                    mt5ModalFormMessage.className = 'text-sm mt-3 text-blue-500 dark:text-blue-400';
+                }
+
+
+                const loginVal = document.getElementById('mt5ModalLogin').value;
+                const passwordVal = document.getElementById('mt5ModalPassword').value;
+                const serverVal = document.getElementById('mt5ModalServer').value;
+                const pathVal = document.getElementById('mt5ModalPath').value;
+
+                if (!loginVal || !serverVal) {
+                    const msg = 'Login ID and Server are required.';
+                    showToast(msg, 'error');
+                    if (mt5ModalFormMessage) {
+                        mt5ModalFormMessage.textContent = msg;
+                        mt5ModalFormMessage.className = 'text-sm mt-3 text-red-500 dark:text-red-400';
+                    }
+                    if (saveMt5ModalBtn) {
+                        saveMt5ModalBtn.disabled = false;
+                        saveMt5ModalBtn.innerHTML = originalButtonText;
+                    }
+                    return;
+                }
+
+                const payload = {
+                    mt5_credentials: {
+                        login: parseInt(loginVal),
+                        server: serverVal,
+                        mt5_terminal_path: pathVal || null
+                    }
+                };
+                if (passwordVal) {
+                    payload.mt5_credentials.password = passwordVal;
+                }
+
+                try {
+                    const data = await apiCall('/config/update', 'POST', payload);
+                    if (data) {
+                        const messageType = data.status === "RELOADED_WITH_MT5_ERROR" || !data.success ? 'error' : 'success';
+                        showToast(data.message, messageType);
+                        if (mt5ModalFormMessage) {
+                            mt5ModalFormMessage.textContent = data.message;
+                            mt5ModalFormMessage.className = `text-sm mt-3 ${messageType === 'success' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`;
+                        }
+
+                        if (data.success && messageType === 'success') {
+                           setTimeout(closeMt5Modal, 1500);
+                        }
+                        fetchBotStatus();
+                    }
+                } catch (error) {
+                     if (mt5ModalFormMessage) {
+                        mt5ModalFormMessage.textContent = error.message || 'An unexpected error occurred.';
+                        mt5ModalFormMessage.className = 'text-sm mt-3 text-red-500 dark:text-red-400';
+                    }
+                } finally {
+                    if (saveMt5ModalBtn) {
+                        saveMt5ModalBtn.disabled = false;
+                        saveMt5ModalBtn.innerHTML = originalButtonText;
+                    }
+                }
+            });
+        }
+
+        // Setup conditional field listeners for Profit Securing section
+        ['default', 'btcusdm', 'xauusdm'].forEach(key => {
+            setupConditionalPsFields(`ps-${key}`);
+        });
+
+
+        updateClock(); setInterval(updateClock, 1000);
+        fetchBotStatus(); setInterval(fetchBotStatus, 3000);
+        fetchOpenPositions(); setInterval(fetchOpenPositions, 5000);
+
+        const activeTabId = document.querySelector('.tab-content.active')?.id || 'dashboard';
+        window.showTab(activeTabId);
+
+        apiCall('/logs?limit=7&level=INFO')
+            .then(logs => {
+                const miniLogFeed = document.getElementById('mini-log-feed');
+                if (miniLogFeed) {
+                    if (logs && logs.length > 0) {
+                        miniLogFeed.innerHTML = logs.map(log => `<p class="py-0.5 text-gray-700 dark:text-gray-300">${log.replace(/<[^>]*>?/gm, '')}</p>`).join('');
+                    } else {
+                        miniLogFeed.innerHTML = '<p class="text-gray-500 dark:text-gray-400">No recent key activity.</p>';
+                    }
+                }
+            }).catch(err => {
+                const miniLogFeed = document.getElementById('mini-log-feed');
+                if(miniLogFeed) miniLogFeed.innerHTML = '<p class="text-red-500 dark:text-red-400">Error loading recent activity. Backend may be down.</p>';
+            });
+    });
+</script>
+</body>
+</html>
