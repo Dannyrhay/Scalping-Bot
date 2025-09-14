@@ -1,7 +1,8 @@
 import pandas as pd
-from datetime import timezone
+from datetime import datetime, timezone
 import logging
-import investpy
+import investpy # You may need to install this library: pip install investpy
+
 logger = logging.getLogger(__name__)
 
 def fetch_forex_factory_calendar():
@@ -15,13 +16,18 @@ def fetch_forex_factory_calendar():
     """
     logger.info("Fetching economic calendar data using investpy...")
     try:
-        # Fetch calendar data from today onwards
-        # investpy fetches data based on the local timezone of the machine running the code.
-        # We will convert it to UTC.
+        # Fetch calendar data from today onwards.
         news_df = investpy.economic_calendar()
 
         if news_df.empty:
             logger.warning("investpy returned an empty DataFrame for the economic calendar.")
+            return pd.DataFrame()
+
+        # --- FIX: Filter out 'All Day' events before processing ---
+        # These events don't have a specific time and will cause a parsing error.
+        news_df = news_df[news_df['time'] != 'All Day'].copy()
+        if news_df.empty:
+            logger.warning("No non-'All Day' news events found for today.")
             return pd.DataFrame()
 
         # --- Data Processing to match the required format ---

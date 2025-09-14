@@ -13,6 +13,7 @@ from utils.logging import setup_logging
 from utils.trade_history import save_trade, update_trade_status
 from utils.db_connector import MongoDBConnection
 from strategies.atr_ema_scalper import AtrEmaScalper
+from strategies.hybrid_strategy import HybridStrategy
 from utils.news_manager import NewsManager
 from pymongo import DESCENDING, errors
 
@@ -74,7 +75,8 @@ class TradingBot:
     def initialize_strategies(self):
         """Initializes the active strategy from the config."""
         strategy_constructors = {
-            "AtrEmaScalper": (AtrEmaScalper, lambda c: c) # Pass the whole config
+            "AtrEmaScalper": (AtrEmaScalper, lambda c: c), # Pass the whole config
+            "HybridStrategy": (HybridStrategy, lambda c: c)
         }
         initialized_strategies = []
         active_strategy_names = self.config.get('active_strategies', [])
